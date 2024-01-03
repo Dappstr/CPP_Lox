@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.12)
+
+# set the project name
+project(CPP_Lox)
+
+# specify the C++ standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# specify the C++ compiler
+set(CMAKE_CXX_COMPILER "g++")
+
+# compile_commands.json will be generated in the build folder
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# specify where the source files are
+file(GLOB SOURCES "src/*.cpp")
+
+# add the executable
+add_executable(CPP_Lox ${SOURCES})
+
+# specify where the header files are
+target_include_directories(CPP_Lox PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Copy compile_commands.json to the parent directory after generation
+add_custom_command(TARGET CPP_Lox POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${CMAKE_SOURCE_DIR}/compile_commands.json)
