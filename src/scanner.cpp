@@ -58,7 +58,7 @@ void Scanner::string() {
 	return;
   }
   advance();
-  std::string value = this->m_source.substr(this->m_start + 1, this->m_current - 1);
+  std::string value = this->m_source.substr(this->m_start + 1, this->m_current - this->m_start - 2);
   add_token(Token_Type::STRING, value);
 }
 
@@ -72,9 +72,9 @@ void Scanner::number() {
 	  advance();
 	}
   }
-  std::string number_string2 = this->m_source.substr(this->m_start, this->m_current);
-  double value2 = atof(number_string2.c_str());  
-  add_token(Token_Type::NUMBER, value2);
+  std::string number_string = this->m_source.substr(this->m_start, this->m_current);
+  double value = atof(number_string2.c_str());  
+  add_token(Token_Type::NUMBER, value);
 }
 
 void Scanner::identifier() {
@@ -92,7 +92,7 @@ void Scanner::identifier() {
 }
 
 void Scanner::scan_token() {
-  char c = this->advance();
+  char c = advance();
   switch(c) {
   case '(': add_token(Token_Type::LEFT_PAREN); break;
   case ')':	add_token(Token_Type::RIGHT_PAREN); break;
@@ -104,10 +104,10 @@ void Scanner::scan_token() {
   case '+': add_token(Token_Type::PLUS); break;
   case ';': add_token(Token_Type::SEMICOLON); break ;
   case '*': add_token(Token_Type::STAR); break;
-  case '!': match('=') ? add_token(Token_Type::BANG_EQUAL) : add_token(Token_Type::BANG);
-  case '=': match('=') ? add_token(Token_Type::EQUAL_EQUAL) : add_token(Token_Type::EQUAL);
-  case '<': match('=') ? add_token(Token_Type::LESS_EQUAL) : add_token(Token_Type::LESS);
-  case '>': match('=') ? add_token(Token_Type::GREATER_EQUAL) : add_token(Token_Type::GREATER);
+  case '!': match('=') ? add_token(Token_Type::BANG_EQUAL) : add_token(Token_Type::BANG); break;
+  case '=': match('=') ? add_token(Token_Type::EQUAL_EQUAL) : add_token(Token_Type::EQUAL); break;
+  case '<': match('=') ? add_token(Token_Type::LESS_EQUAL) : add_token(Token_Type::LESS); break;
+  case '>': match('=') ? add_token(Token_Type::GREATER_EQUAL) : add_token(Token_Type::GREATER); break;
   case '/':
 	if(match('/')) {
 	  while(peek() != '\n' && !is_at_end()) {
@@ -123,6 +123,7 @@ void Scanner::scan_token() {
 	else {
 	  add_token(Token_Type::SLASH);
 	}
+	break;
 	
   case ' ':
   case '\r':
