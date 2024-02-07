@@ -72,14 +72,14 @@ void Scanner::number() {
 	  advance();
 	}
   }
-  std::string number_string = this->m_source.substr(this->m_start, this->m_current);
+  std::string number_string = this->m_source.substr(this->m_start, this->m_current - this->m_start);
   double value = atof(number_string2.c_str());  
   add_token(Token_Type::NUMBER, value);
 }
 
 void Scanner::identifier() {
   while(isalnum(peek()) || peek() == '_') { advance(); }
-  std::string text = this->m_source.substr(this->m_start, this->m_current);
+  std::string text = this->m_source.substr(this->m_start, this->m_current - this->m_start);
   Token_Type type;
   auto it = this->m_keywords.find(text);
   if(it != this->m_keywords.end()) {
