@@ -44,7 +44,7 @@ public:
   char peek_next();
   char advance();
   void add_token(Token_Type);
-  void add_token(Token_Type, const std::optional<std::variant<std::string, double>>&);
+  void add_token(Token_Type, const std::optional<std::variant<std::string, double, bool>>&);
   bool match(char);
   void string();
   void number();

@@ -33,7 +33,7 @@ void Scanner::add_token(Token_Type type) {
   add_token(type, std::nullopt);
 }
 
-void Scanner::add_token(Token_Type type, const std::optional<std::variant<std::string, double>>& literal) {
+void Scanner::add_token(Token_Type type, const std::optional<std::variant<std::string, double, bool>>& literal) {
   std::string text = this->m_source.substr(this->m_start, this->m_current - this->m_start);
   this->m_tokens.push_back(Token{type, text, literal, this->m_line});
 }
@@ -73,7 +73,7 @@ void Scanner::number() {
 	}
   }
   std::string number_string = this->m_source.substr(this->m_start, this->m_current - this->m_start);
-  double value = atof(number_string2.c_str());  
+  double value = atof(number_string.c_str());  
   add_token(Token_Type::NUMBER, value);
 }
 
