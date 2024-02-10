@@ -24,5 +24,6 @@ public:
   
   const std::string to_string();
   const Token_Type get_type() const;
+  const size_t get_line();
   std::optional<std::variant<std::string, double, bool>> get_literal();
 };

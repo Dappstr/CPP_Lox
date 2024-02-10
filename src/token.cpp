@@ -12,7 +12,7 @@ Token::Token() {
 
 Token::Token(const Token_Type type,
 		const std::string& lexeme,
-			 const std::optional<std::variant<std::string, double, bool>> literal,
+		const std::optional<std::variant<std::string, double, bool>> literal,
 		const size_t line) {
 	this->m_type = type;
 	this->m_lexeme = lexeme;
@@ -55,6 +55,10 @@ const std::string Token::to_string() {
 
 const Token_Type Token::get_type() const {
   return this->m_type;
+}
+
+const size_t Token::get_line() {
+  return this->m_line;
 }
 
 std::optional<std::variant<std::string, double, bool>> Token::get_literal() {
