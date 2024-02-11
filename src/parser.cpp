@@ -13,11 +13,11 @@ Parser::Parser(const std::vector<Token>& tokens) {
   this->m_tokens = tokens;
 }
 
-// This function handles parsing the simplest elements of the language
+// This function handles parsing the simplest elements of the language, or the "atoms"
 std::unique_ptr<Expr> Parser::primary() {
   if(match({Token_Type::FALSE})) { return std::make_unique<Literal>(false); } 
-  else if(match({Token_Type::TRUE})) { return std::make_unique<Literal>(true); }
-  else if(match({Token_Type::NIL})) { return std::make_unique<Literal>(std::nullopt); }
+  if(match({Token_Type::TRUE})) { return std::make_unique<Literal>(true); }
+  if(match({Token_Type::NIL})) { return std::make_unique<Literal>(std::nullopt); }
   
   if(match({Token_Type::NUMBER, Token_Type::STRING})) {
 	return std::make_unique<Literal>(this->m_tokens.at(this->m_current).get_literal());
@@ -25,18 +25,19 @@ std::unique_ptr<Expr> Parser::primary() {
 
   // If a '(' is found
   if(match({Token_Type::LEFT_PAREN})) {
-
 	/*
-	  the first call to `expression()` is made, returning equality()
+	  The first call to `expression()` is made, returning equality()
 	  equality() calls comparison(), which then calls term()
 	  term() then calls factor() which then calls unary()
 	  unary() will check if the current expression contains a unary operator
-	  Essentially, we start parsing parsing at the highest precedence
+	  essentially, we start parsing at the highest precedence
 	  which are the unary operators.
 	*/
 	auto expr = expression();
 
 	// Once expr is finally parsed, we check if the current token is of type RIGHT_PAREN
+	// The reason this works is because `match()` (which will be called in the subsequent methods in the chain) will call `advance()` which will move the current
+	// token cursor to the next token
 	// If it is, we advance to it, otherwise throw an exception with the 2nd argument as the message
 	consume(Token_Type::RIGHT_PAREN, "Expect \')\' after expression.");
 
@@ -45,34 +46,56 @@ std::unique_ptr<Expr> Parser::primary() {
   }
 }
 
-//Will check for the unary form of '!' and '-'(negative number)
+// Will check for the unary form of '!' and '-'(negative number)
+// This is the highest precedence operator so it is recursively called first
 std::unique_ptr<Expr> Parser::unary() {
+
+  // If the current token is either '!' or '-', move the `current` cursor to the next one
   if(match({Token_Type::BANG, Token_Type::MINUS})) {
 	Token op = previous();
 
-	//This recursive call to unary will either return a bang, minus, or the literal returned by `primary()
+	// This recursive call to unary will either return a bang, minus, or the literal returned by `primary()
 	// The `expr` object is them constructed with the operator, and the value saved in `right`
 	auto right = unary();
 	auto expr = std::make_unique<Unary>(op, std::move(right));
+
+	// We return the unary expression such as -5
 	return expr;
   }
+  // Otherwise we return a primary variable which represents an atom that doesn't have a unary
+  // operator to the left of it, such as '-' or '!'
   return primary();
 }
 
-// Multiplication and division
+// Multiplication and division (*, /)
 std::unique_ptr<Expr> Parser::factor() {
+  // If no unary operators are found, expr() will have the value returned by `primary()` which can either be a literal, a unary operator with a literal, or a grouping within parenthesis
   auto expr = unary();
+
+  // If the parser detects a multiplication or division token
   while(match({Token_Type::SLASH, Token_Type::STAR})) {
+	// Get the token representing the operator which will be the previous one
 	Token op = previous();
+
+	// `right` will, like `expr`, either have a literal, unary with literal, or recursively call `expression()`
 	auto right = unary();
+
+	// The left instance can either be a literal or a grouping, same with the `right` instance
 	expr = std::make_unique<Binary>(std::move(expr), op, std::move(right));
   }
+
+  // expr now either has a Binary instance as indicated by the above `match()` call
+  // Or it will have a value returned by primary which can either be a literal, unary with literal,
+  // or a Grouping instance
   return expr;
 }
 
-// addition and subtraction
+// addition and subtraction (+, -)
 std::unique_ptr<Expr> Parser::term() {
+  // `expr` will have the value returned by factor, which has either a literal instance, or a grouping instance
   auto expr = factor();
+
+  // Check if the parser finds either a minus or a plus token
   while(match({Token_Type::MINUS, Token_Type::PLUS})) {
 	Token op = previous();
 	auto right = factor();
@@ -93,6 +116,7 @@ std::unique_ptr<Expr> Parser::comparison() {
 }
 
 // Equality operators (!=, ==)
+// These are the lowest precedence operators, meaning they will be evaluated last
 std::unique_ptr<Expr> Parser::equality() {
   auto expr = comparison();
   while(match({Token_Type::BANG_EQUAL, Token_Type::EQUAL_EQUAL})) {
@@ -103,10 +127,19 @@ std::unique_ptr<Expr> Parser::equality() {
   return expr;
 }
 
+// Entry point for parsing an expression, starting from the highest precendence 
+// The order of precedence is as follows:
+// unary, factor, terminal, comparison, then equality
 std::unique_ptr<Expr> Parser::expression() { return equality(); }
+
+// Peek the current token
 const Token& Parser::peek() { return this->m_tokens.at(this->m_current); }
+
+// Peek the previous token
 const Token& Parser::previous() { return this->m_tokens.at(this->m_current - 1); }
 
+// First check the current token type matches the argued token type
+// If it matches return the current token, then advance to the next token( advance() )
 const Token& Parser::consume(Token_Type type, std::string&& msg) {
   if(check(type)) { return advance(); }
   else {
@@ -117,6 +150,7 @@ const Token& Parser::consume(Token_Type type, std::string&& msg) {
 
 bool Parser::is_at_end() { return peek().get_type() == Token_Type::End_Of_File; }
 
+// Move the token cursor forward once and return the previous current token
 const Token& Parser::advance() {
   if(!is_at_end()) { this->m_current++; }
   return previous();
