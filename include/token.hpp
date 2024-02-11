@@ -23,7 +23,8 @@ public:
   Token& operator=(const Token& t);
   
   const std::string to_string();
+  const std::string& get_lexeme() const;
   const Token_Type get_type() const;
-  const size_t get_line();
+  const size_t get_line() const;
   std::optional<std::variant<std::string, double, bool>> get_literal();
 };

@@ -53,11 +53,15 @@ const std::string Token::to_string() {
   return token_string;
 }
 
+const std::string& Token::get_lexeme() const {
+  return this->m_lexeme;
+}
+
 const Token_Type Token::get_type() const {
   return this->m_type;
 }
 
-const size_t Token::get_line() {
+const size_t Token::get_line() const {
   return this->m_line;
 }
 

@@ -13,7 +13,6 @@ private:
   std::vector<Token> m_tokens;
   size_t m_current = 0;
   
-  
 public:
   Parser(const std::vector<Token>& tokens);
   std::unique_ptr<Expr> primary();
@@ -25,7 +24,9 @@ public:
   std::unique_ptr<Expr> expression(); // returns equality()
   const Token& peek();
   const Token& previous();
-  const Token& consume(Token_Type type, std::string&& msg);
+  const Token& consume(Token_Type type, const std::string& msg);
+  std::string error(const Token& token, const std::string& msg);
+  void report(const size_t line, const std::string& where, const std::string& msg);
   bool is_at_end();
   const Token& advance();
   bool check(Token_Type type);

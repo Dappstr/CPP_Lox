@@ -8,6 +8,7 @@
 #include <initializer_list>
 #include <variant>
 #include <optional>
+#include <iostream>
 
 Parser::Parser(const std::vector<Token>& tokens) {
   this->m_tokens = tokens;
@@ -140,12 +141,28 @@ const Token& Parser::previous() { return this->m_tokens.at(this->m_current - 1);
 
 // First check the current token type matches the argued token type
 // If it matches return the current token, then advance to the next token( advance() )
-const Token& Parser::consume(Token_Type type, std::string&& msg) {
-  if(check(type)) { return advance(); }
-  else {
-	std::string err = "Token Type: " + std::to_string(static_cast<int>(type)) + ' ' + msg;
-	throw std::runtime_error(err);
+// Otherwise we attempt to gracefully handle the parsing error and report the issue back to the user
+const Token& Parser::consume(Token_Type type, const std::string& msg) {
+  if(check(type)) {
+	return advance();
   }
+  else {
+	throw std::runtime_error(error(peek(), msg));
+  }
+}
+
+std::string Parser::error(const Token& token, const std::string& msg) {
+  if(token.get_type() == Token_Type::End_Of_File) {
+	report(token.get_line(), " at end", msg);
+  }
+  else {
+	report(token.get_line(), " at '" + token.get_lexeme() + "'", msg);
+  }
+  return "Parser error: " + msg;
+}
+
+void Parser::report(const size_t line, const std::string& where, const std::string& msg) {
+  std::cerr << "[Line " << line << "] Error: " << where << ": " << msg;
 }
 
 bool Parser::is_at_end() { return peek().get_type() == Token_Type::End_Of_File; }
