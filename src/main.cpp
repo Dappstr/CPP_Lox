@@ -1,5 +1,7 @@
 #include "../include/main.hpp"
 #include "../include/scanner.hpp"
+#include "../include/parser.hpp"
+#include "../include/expr.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -24,8 +26,24 @@ void run(const std::string& input) {
   Scanner scanner = Scanner(input);
   std::vector<Token> tokens = scanner.scan_tokens();
 
+  /*
   for(auto token : tokens) {
 	std::cout << token.to_string() << '\n';
+  }
+  */
+  Parser parser = Parser(tokens);
+  std::unique_ptr<Expr> expression = parser.parse();
+
+  if(had_error) { return; }
+  
+  // Print out expression
+  if(expression) {
+	Ast_Printer printer;
+	std::string expression_str = printer.print(expression.get());
+	std::cout << expression_str << '\n';
+  }
+  else {
+	std::cerr << "Failed to parse expression.\n";
   }
 }
 

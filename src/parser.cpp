@@ -14,14 +14,26 @@ Parser::Parser(const std::vector<Token>& tokens) {
   this->m_tokens = tokens;
 }
 
+std::unique_ptr<Expr> Parser::parse() {
+  try {
+	return expression();
+  }
+  catch(const std::runtime_error&) {
+	// Return empty/null pointer
+	return std::unique_ptr<Expr>();
+  }
+}
+
 // This function handles parsing the simplest elements of the language, or the "atoms"
 std::unique_ptr<Expr> Parser::primary() {
   if(match({Token_Type::FALSE})) { return std::make_unique<Literal>(false); } 
   if(match({Token_Type::TRUE})) { return std::make_unique<Literal>(true); }
   if(match({Token_Type::NIL})) { return std::make_unique<Literal>(std::nullopt); }
-  
+
+  // Match advances the cursor if a successful token type is found.
+  // Because of this, we need to get the literal value of the previous token
   if(match({Token_Type::NUMBER, Token_Type::STRING})) {
-	return std::make_unique<Literal>(this->m_tokens.at(this->m_current).get_literal());
+	return std::make_unique<Literal>(this->m_tokens.at(this->m_current - 1).get_literal());
   }
 
   // If a '(' is found
@@ -45,6 +57,9 @@ std::unique_ptr<Expr> Parser::primary() {
 	// Return the expression (`expr`) inside of the parenthesis
 	return std::make_unique<Grouping>(std::move(expr));
   }
+
+  // If we encounter a token that can't start an expression
+  throw std::runtime_error(error(peek(), "Expected an expression."));
 }
 
 // Will check for the unary form of '!' and '-'(negative number)
@@ -128,10 +143,21 @@ std::unique_ptr<Expr> Parser::equality() {
   return expr;
 }
 
+std::unique_ptr<Expr> Parser::ternary() {
+  auto expr = equality();
+  if(match({Token_Type::QUESTION_MARK})) {
+	auto then_branch = expression();
+	consume(Token_Type::COLON, "Expect ':' after `then` branch of ternary");
+	auto else_branch = expression();
+	expr = std::make_unique<Ternary>(std::move(expr), std::move(then_branch), std::move(else_branch));
+  }
+  return expr;
+}
+
 // Entry point for parsing an expression, starting from the highest precendence 
 // The order of precedence is as follows:
 // unary, factor, terminal, comparison, then equality
-std::unique_ptr<Expr> Parser::expression() { return equality(); }
+std::unique_ptr<Expr> Parser::expression() { return ternary(); }
 
 // Peek the current token
 const Token& Parser::peek() { return this->m_tokens.at(this->m_current); }
@@ -162,7 +188,31 @@ std::string Parser::error(const Token& token, const std::string& msg) {
 }
 
 void Parser::report(const size_t line, const std::string& where, const std::string& msg) {
-  std::cerr << "[Line " << line << "] Error: " << where << ": " << msg;
+  std::cerr << "[Line " << line << "] Error: " << where << ": " << msg << '\n';
+}
+
+// We discard the tokens until the parser thinks it finds the start of a statement or a semicolon
+void Parser::synchronize() {
+  advance();
+  while(!is_at_end()) {
+	if(previous().get_type() == Token_Type::SEMICOLON) { return; }
+
+	switch(peek().get_type()) {
+	case Token_Type::CLASS:
+	case Token_Type::FOR:
+	case Token_Type::FUN:
+	case Token_Type::IF:
+	case Token_Type::PRINT:
+	case Token_Type::RETURN:
+	case Token_Type::VAR:
+	case Token_Type::WHILE:
+	  return;
+
+	default:
+	  break;
+	}
+	advance();
+  }
 }
 
 bool Parser::is_at_end() { return peek().get_type() == Token_Type::End_Of_File; }
