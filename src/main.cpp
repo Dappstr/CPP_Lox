@@ -1,3 +1,6 @@
+#include "../include/token.hpp"
+#include "../include/scanner.hpp"
+
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -15,13 +18,12 @@ void error(const size_t line, const std::string& message) {
 }
 
 void run(const std::string& src) {
-/*    Scanner scanner = Scanner(src);
+    Scanner scanner = Scanner(src);
     std::vector<Token> tokens = scanner.scan_tokens();
 
     for(const Token& t : tokens) {
         std::cout << t << '\n';
     }
-    */
 }
 
 void run_file(const char* file_loc) {
@@ -39,8 +41,6 @@ void run_file(const char* file_loc) {
 
     file.read(&buffer[0], file_size);
     file.close();
-
-    // std::cout << "File contents: " << buffer;
 }
 
 void run_prompt() {
