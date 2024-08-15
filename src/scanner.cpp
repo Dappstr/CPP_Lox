@@ -61,7 +61,7 @@ void Scanner::scan_token() {
                         advance();
                         break;
                     }
-                    else if(!is_at_end()) {
+                    else if(is_at_end()) {
                         std::cerr << "Line: " << m_line << ": Unterminated multiline comment.\n";
                     }
                 }
@@ -144,7 +144,7 @@ void Scanner::str() {
 
     advance();
 
-    std::string str = m_source.substr(m_start + 1, (m_current - m_start));
+    std::string str = m_source.substr(m_start + 1, (m_current - m_start - 1));
     add_token(STRING, str);
 }
 
