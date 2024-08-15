@@ -51,6 +51,21 @@ void Scanner::scan_token() {
                     advance();
                 }
             }
+            else if(match('*')) {
+                while(true) {
+                    if(peek() == '\n') {
+                        m_line += 1;
+                    }
+                    else if(peek() == '*' && peek_next() == '/') {
+                        advance();
+                        advance();
+                        break;
+                    }
+                    else if(!is_at_end()) {
+                        std::cerr << "Line: " << m_line << ": Unterminated multiline comment.\n";
+                    }
+                }
+            }
             else {
                 add_null_token(SLASH);
             }
