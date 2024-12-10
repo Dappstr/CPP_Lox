@@ -144,7 +144,7 @@ void Scanner::str() {
 
     advance();
 
-    std::string str = m_source.substr(m_start + 1, (m_current - m_start - 1));
+    std::string str = m_source.substr(m_start + 1, (m_current - m_start - 2));
     add_token(STRING, str);
 }
 
