@@ -2,15 +2,15 @@
 #include <string>
 #include <vector>
 
-Scanner::Scanner(const std::string& source)
-    :m_source(source) {}
+Scanner::Scanner(std::string&& source)
+    :m_source(std::move(source)) {}
 
 std::vector<Token> Scanner::scan_tokens() {
     while(!is_at_end()) {
         m_start = m_current;
         scan_token();
     }
-    m_tokens.push_back({EndOfFile, "", std::nullopt, m_line});
+    m_tokens.emplace_back(EndOfFile, "", std::nullopt, m_line);
     return m_tokens;
 }
 
@@ -94,7 +94,7 @@ void Scanner::scan_token() {
     }
 }
 
-bool Scanner::is_at_end() {
+bool Scanner::is_at_end() const {
     return m_current >= m_source.length();
 }
 
@@ -106,9 +106,9 @@ void Scanner::add_null_token(const Token_Type type) {
     add_token(type, std::nullopt);
 }
 
-void Scanner::add_token(const Token_Type type, const Lit& literal) {
-    const std::string str = m_source.substr(m_start, m_current - m_start);
-    m_tokens.push_back({type, str, literal, m_line});
+void Scanner::add_token(const Token_Type type, Lit&& literal) {
+    std::string str = m_source.substr(m_start, m_current - m_start);
+    m_tokens.emplace_back(type, std::move(str), std::move(literal), m_line);
 }
 
 bool Scanner::match(const char expected) {
@@ -119,14 +119,14 @@ bool Scanner::match(const char expected) {
     return true;
 }
 
-char Scanner::peek() {
+char Scanner::peek() const {
     if(is_at_end()) { return '\0'; }
     else {
         return m_source.at(m_current);
     }
 }
 
-char Scanner::peek_next() {
+char Scanner::peek_next() const {
     if(m_current + 1 >= m_source.length()) { return '\0'; }
     else { return m_source.at(m_current + 1); }
 }
@@ -150,19 +150,21 @@ void Scanner::str() {
 
 void Scanner::number() {
     while(isdigit(peek())) { advance(); }
+
     if(peek() == '.' && isdigit(peek_next())) { advance(); }
+
     while(isdigit(peek())) { advance(); }
-    std::string str_number { m_source.substr(m_start, (m_current - m_start)) };
+
+    const std::string str_number { m_source.substr(m_start, (m_current - m_start)) };
     double num = std::stod(str_number);
     add_token(NUMBER, num);
 }
 
 void Scanner::identifier() {
     while(isalnum(peek())) { advance(); }
-    std::string text { m_source.substr(m_start, m_current - m_start) };
+    const std::string text { m_source.substr(m_start, m_current - m_start) };
 
-    auto it = m_keywords.find(text);
-    if(it != m_keywords.end()) {
+    if(const auto it = m_keywords.find(text); it != m_keywords.end()) {
         add_null_token(it->second);
     }
     else {

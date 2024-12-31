@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <utility>
 #include <variant>
 #include <string>
 #include <iostream>
@@ -65,9 +66,8 @@ class Token {
         size_t m_line{};
 
     public:
-        Token(const Token_Type type, const std::string& lexeme, const Lit& literal, const size_t line)
-            :m_type(type), m_lexeme(lexeme), m_literal(literal), m_line(line) {}
-        
+        Token(const Token_Type type, std::string&&  lexeme, Lit&& literal, const size_t line)
+            :m_type(type), m_lexeme(std::move(lexeme)), m_literal(std::move(literal)), m_line(line) {}
 
         friend std::ostream& operator<<(std::ostream& out, const Token& t) {
             out << "Token { type:" << t.m_type << ", lexeme: " << t.m_lexeme << ", literal: ";
@@ -75,10 +75,10 @@ class Token {
             if(!t.m_literal.has_value()) {
                 out << "null";
             }
-            else if(auto str = std::get_if<std::string>(&t.m_literal.value())) {
+            else if(const auto str = std::get_if<std::string>(&t.m_literal.value())) {
                 out << *str;
             }
-            else if (auto f = std::get_if<double>(&t.m_literal.value())) {
+            else if (const auto f = std::get_if<double>(&t.m_literal.value())) {
                 out << *f;
             }
 

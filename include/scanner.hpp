@@ -33,16 +33,16 @@ class Scanner {
         };
 
     public:
-        Scanner(const std::string& source);
+        explicit Scanner(std::string&& source);
         std::vector<Token> scan_tokens();
         void scan_token();
-        bool is_at_end();
+        bool is_at_end() const;
         char advance();
-        void add_null_token(const Token_Type type);
-        void add_token(const Token_Type type, const Lit& literal);
-        bool match(const char expected);
-        char peek();
-        char peek_next();
+        void add_null_token(Token_Type type);
+        void add_token(Token_Type type, Lit&& literal);
+        bool match(char expected);
+        char peek() const;
+        char peek_next() const;
         void str();
         void number();
         void identifier();

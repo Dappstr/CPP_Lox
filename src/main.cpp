@@ -17,8 +17,8 @@ void error(const size_t line, const std::string& message) {
     report(line, "", message);
 }
 
-void run(const std::string& src) {
-    Scanner scanner = Scanner(src);
+void run(std::string&& src) {
+    auto scanner = Scanner(std::move(src));
     std::vector<Token> tokens = scanner.scan_tokens();
 
     for(const Token& t : tokens) {
@@ -41,6 +41,8 @@ void run_file(const char* file_loc) {
 
     file.read(&buffer[0], file_size);
     file.close();
+
+    run(std::move(buffer));
 }
 
 void run_prompt() {
@@ -53,12 +55,12 @@ void run_prompt() {
             break;
         }
         else {
-            run(line);
+            run(std::move(line));
         }
     }
 }
 
-int main(int argc, char* argv[]) {
+int main(const int argc, char* argv[]) {
     if(argc < 2) {
         run_prompt();
     }
