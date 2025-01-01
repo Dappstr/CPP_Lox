@@ -15,8 +15,7 @@ std::vector<Token> Scanner::scan_tokens() {
 }
 
 void Scanner::scan_token() {
-    char c = advance();
-    switch(c) {
+    switch(const char c = advance()) {
         case '(':
             add_null_token(LEFT_PAREN); break;
         case ')':
@@ -121,14 +120,12 @@ bool Scanner::match(const char expected) {
 
 char Scanner::peek() const {
     if(is_at_end()) { return '\0'; }
-    else {
-        return m_source.at(m_current);
-    }
+    return m_source.at(m_current);
 }
 
 char Scanner::peek_next() const {
     if(m_current + 1 >= m_source.length()) { return '\0'; }
-    else { return m_source.at(m_current + 1); }
+    return m_source.at(m_current + 1);
 }
 
 void Scanner::str() {
