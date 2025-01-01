@@ -53,10 +53,10 @@ enum Token_Type {
     VAR,
     WHILE,
 
-    EndOfFile,
+    END_OF_FILE,
 };
 
-using Lit = std::optional<std::variant<std::string, double>>;
+using Lit = std::optional<std::variant<std::string, double, bool>>;
 
 class Token {
     private:
@@ -68,6 +68,11 @@ class Token {
     public:
         Token(const Token_Type type, std::string&&  lexeme, Lit&& literal, const size_t line)
             :m_type(type), m_lexeme(std::move(lexeme)), m_literal(std::move(literal)), m_line(line) {}
+
+        [[nodiscard]] Token_Type type() const { return m_type; }
+        [[nodiscard]] std::string lexeme() const { return m_lexeme; }
+        [[nodiscard]] Lit literal() const { return m_literal; }
+        [[nodiscard]] size_t line() const { return m_line; }
 
         friend std::ostream& operator<<(std::ostream& out, const Token& t) {
             out << "Token { type:" << t.m_type << ", lexeme: " << t.m_lexeme << ", literal: ";
@@ -84,5 +89,5 @@ class Token {
 
             out << ", line: " << t.m_line << "}\n";
             return out;
-        }    
+        }
 };

@@ -2,7 +2,7 @@
 #include "token.hpp"
 #include <memory>
 #include <variant>
-#include <vector>
+
 
 #ifndef EXPRESSION_HPP
 #define EXPRESSION_HPP
@@ -59,11 +59,11 @@ class Group_Expression final : public Expression {
 
 class Literal_Expression final : public Expression {
 	private:
-		using Literal = std::variant<double, std::string, bool>;
+		using Literal = std::variant<std::string, double, bool>;
 		std::optional<Literal> m_value;
 
 	public:
-		explicit Literal_Expression(Literal&& value)
+		explicit Literal_Expression(std::optional<Literal> value)
 			:m_value(std::move(value)) {}
 
 		void accept(Expression_Visitor& visitor) override;

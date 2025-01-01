@@ -10,7 +10,7 @@ std::vector<Token> Scanner::scan_tokens() {
         m_start = m_current;
         scan_token();
     }
-    m_tokens.emplace_back(EndOfFile, "", std::nullopt, m_line);
+    m_tokens.emplace_back(END_OF_FILE, "", std::nullopt, m_line);
     return m_tokens;
 }
 

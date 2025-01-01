@@ -18,5 +18,7 @@ add_executable(CPP_Lox
     src/scanner.cpp
         include/expression.hpp
         src/expression.cpp
+        include/parser.hpp
+        src/parser.cpp
 )
 
