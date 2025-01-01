@@ -6,6 +6,8 @@
 #include <fstream>
 #include <vector>
 
+#include "parser.hpp"
+
 static bool had_error = false;
 
 void report(const size_t line, const std::string& where, const std::string& msg) {
@@ -21,9 +23,13 @@ void run(std::string&& src) {
     auto scanner = Scanner(std::move(src));
     std::vector<Token> tokens = scanner.scan_tokens();
 
-    for(const Token& t : tokens) {
+   /* for(const Token& t : tokens) {
         std::cout << t << '\n';
     }
+    */
+
+    auto p = Parser(std::move(tokens));
+    auto expr = p.parse();
 }
 
 void run_file(const char* file_loc) {
@@ -51,12 +57,8 @@ void run_prompt() {
         std::string line {};
         std::getline(std::cin, line);
 
-        if(line == "quit()") {
-            break;
-        }
-        else {
-            run(std::move(line));
-        }
+        if(line == "quit()") { break; }
+        run(std::move(line));
     }
 }
 

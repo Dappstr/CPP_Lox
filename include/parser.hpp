@@ -16,8 +16,9 @@ class Parser {
 	public:
 		explicit Parser(std::vector<Token>&& tokens)
 			:m_tokens(std::move(tokens)) {}
-		std::unique_ptr<Expression> equality();
+		std::unique_ptr<Expression> parse();
 		std::unique_ptr<Expression> expression();
+		std::unique_ptr<Expression> equality();
 		std::unique_ptr<Expression> comparison();
 		std::unique_ptr<Expression> term();
 		std::unique_ptr<Expression> factor();
@@ -41,7 +42,7 @@ class Parser {
 		Token& peek();
 		Token& previous();
 		Token& consume(Token_Type, const char*);
-
+		void synchronize();
 };
 
 

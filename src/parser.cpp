@@ -1,9 +1,17 @@
 #include "expression.hpp"
 #include "parser.hpp"
 
-std::unique_ptr<Expression> Parser::expression() {
-	return equality();
+std::unique_ptr<Expression> Parser::parse() {
+	try {
+		return expression();
+	} catch (const std::runtime_error& e) {
+		synchronize();
+		std::cout << e.what() << '\n';
+		return nullptr;
+	}
 }
+
+std::unique_ptr<Expression> Parser::expression() { return equality(); }
 
 std::unique_ptr<Expression> Parser::equality() {
 	auto expr = comparison();
@@ -85,7 +93,20 @@ Token& Parser::peek() { return m_tokens.at(m_current); }
 
 Token& Parser::previous() { return m_tokens.at(m_current - 1); }
 
-Token & Parser::consume(const Token_Type type, const char* message) {
+Token& Parser::consume(const Token_Type type, const char* message) {
 	if (check(type)) { return advance(); }
 	throw std::runtime_error(message);
+}
+
+void Parser::synchronize() {
+	advance();
+	while (!is_at_end()) {
+		if (previous().type() == SEMICOLON) { return; }
+		switch (peek().type()) {
+			case CLASS: case FUN: case FOR: case IF: case PRINT: case RETURN: case VAR: case WHILE: return;
+			default:
+				break;
+		}
+		advance();
+	}
 }
