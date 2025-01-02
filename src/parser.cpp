@@ -16,9 +16,9 @@ std::unique_ptr<Expression> Parser::expression() { return equality(); }
 std::unique_ptr<Expression> Parser::equality() {
 	auto expr = comparison();
 	while (match(BANG, BANG_EQUAL)) {
-		const Token& op = previous();
+		const auto op = previous().type();
 		auto right = comparison();
-		expr = std::make_unique<Binary_Expression>(std::move(expr), op.lexeme(), std::move(right));
+		expr = std::make_unique<Binary_Expression>(std::move(expr), op, std::move(right));
 	}
 	return std::move(expr);
 }
@@ -26,9 +26,9 @@ std::unique_ptr<Expression> Parser::equality() {
 std::unique_ptr<Expression> Parser::comparison() {
 	auto expr = term();
 	while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
-		const Token& op = previous();
+		const auto op = previous().type();
 		auto right = term();
-		expr = std::make_unique<Binary_Expression>(std::move(expr), op.lexeme(), std::move(right));
+		expr = std::make_unique<Binary_Expression>(std::move(expr), op, std::move(right));
 	}
 	return std::move(expr);
 }
@@ -36,9 +36,9 @@ std::unique_ptr<Expression> Parser::comparison() {
 std::unique_ptr<Expression> Parser::term() {
 	auto expr = factor();
 	while (match(MINUS, PLUS)) {
-		const Token& op = previous();
+		const auto op = previous().type();
 		auto right = factor();
-		expr = std::make_unique<Binary_Expression>(std::move(expr), op.lexeme(), std::move(right));
+		expr = std::make_unique<Binary_Expression>(std::move(expr), op, std::move(right));
 	}
 	return std::move(expr);
 }
@@ -46,18 +46,18 @@ std::unique_ptr<Expression> Parser::term() {
 std::unique_ptr<Expression> Parser::factor() {
 	auto expr = unary();
 	while (match(SLASH, STAR)) {
-		const Token& op = previous();
+		const auto op = previous().type();
 		auto right = unary();
-		expr = std::make_unique<Binary_Expression>(std::move(expr), op.lexeme(), std::move(right));
+		expr = std::make_unique<Binary_Expression>(std::move(expr), op, std::move(right));
 	}
 	return std::move(expr);
 }
 
 std::unique_ptr<Expression> Parser::unary() {
 	if (match(BANG, MINUS)) {
-		const Token& op = previous();
+		const auto op = previous().type();
 		auto right = unary();
-		return std::make_unique<Unary_Expression>(op.lexeme(), std::move(right));
+		return std::make_unique<Unary_Expression>(op, std::move(right));
 	}
 	return primary();
 }

@@ -3,45 +3,46 @@
 #include <memory>
 #include <variant>
 
-
 #ifndef EXPRESSION_HPP
 #define EXPRESSION_HPP
+
+using Value = std::optional<std::variant<std::string, double, bool>>;
 
 class Expression_Visitor;
 
 class Expression {
 	public:
-		virtual void accept(Expression_Visitor& visitor) = 0;
+		virtual Value accept(Expression_Visitor& visitor) const = 0;
 		virtual ~Expression() = default;
 };
 
 class Binary_Expression final : public Expression {
 	private:
 		std::shared_ptr<Expression> m_left;
-		std::string m_op;
+		Token_Type m_op;
 		std::shared_ptr<Expression> m_right;
 
 	public:
-		Binary_Expression(std::unique_ptr<Expression>&& left, std::string&& op, std::unique_ptr<Expression>&& right)
-			:m_left(std::move(left)), m_op(std::move(op)), m_right(std::move(right)) {}
+		Binary_Expression(std::unique_ptr<Expression>&& left, Token_Type op, std::unique_ptr<Expression>&& right)
+			:m_left(std::move(left)), m_op(op), m_right(std::move(right)) {}
 
-		void accept(Expression_Visitor& visitor) override;
+		Value accept(Expression_Visitor& visitor) const override;
 		const Expression& left() const { return *m_left; }
-		const std::string& op() const { return m_op; }
+		const Token_Type op() const { return m_op; }
 		const Expression& right() const { return *m_right; }
 };
 
 class Unary_Expression final : public Expression {
 	private:
-		std::string m_op;
+		Token_Type m_op;
 		std::unique_ptr<Expression> m_right;
 
 	public:
-		Unary_Expression(std::string&& op, std::unique_ptr<Expression>&& right)
-			:m_op(std::move(op)), m_right(std::move(right)) {}
+		Unary_Expression(Token_Type op, std::unique_ptr<Expression>&& right)
+			:m_op(op), m_right(std::move(right)) {}
 
-		void accept(Expression_Visitor& visitor) override;
-		const std::string& op() const { return m_op; }
+		Value accept(Expression_Visitor& visitor) const override;
+		const Token_Type op() const { return m_op; }
 		const Expression& right() const { return *m_right; }
 };
 
@@ -53,7 +54,7 @@ class Group_Expression final : public Expression {
 		explicit Group_Expression(std::unique_ptr<Expression>&& expression)
 			:m_expression(std::move(expression)) {}
 
-		void accept(Expression_Visitor& visitor) override;
+		Value accept(Expression_Visitor& visitor) const override;
 		const Expression& expression() const { return *m_expression; }
 };
 
@@ -66,16 +67,16 @@ class Literal_Expression final : public Expression {
 		explicit Literal_Expression(std::optional<Literal> value)
 			:m_value(std::move(value)) {}
 
-		void accept(Expression_Visitor& visitor) override;
+		Value accept(Expression_Visitor& visitor) const override;
 		const Literal& value() const { return *m_value; }
 };
 
 class Expression_Visitor {
 	public:
-		virtual void visit(const Binary_Expression& expr) = 0;
-		virtual void visit(const Unary_Expression& expr) = 0;
-		virtual void visit(const Group_Expression& expr) = 0;
-		virtual void visit(const Literal_Expression& expr) = 0;
+		virtual Value visit(const Binary_Expression& expr) = 0;
+		virtual Value visit(const Unary_Expression& expr) = 0;
+		virtual Value visit(const Group_Expression& expr) = 0;
+		virtual Value visit(const Literal_Expression& expr) = 0;
 		virtual ~Expression_Visitor() = default;
 };
 

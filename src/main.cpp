@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 
+#include "interpreter.hpp"
 #include "parser.hpp"
 
 static bool had_error = false;
@@ -29,7 +30,9 @@ void run(std::string&& src) {
     */
 
     auto p = Parser(std::move(tokens));
-    auto expr = p.parse();
+    const auto expr = p.parse();
+    Interpreter interpreter;
+    interpreter.interpret(expr);
 }
 
 void run_file(const char* file_loc) {
