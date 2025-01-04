@@ -25,7 +25,7 @@ std::unique_ptr<Expression> Parser::equality() {
 
 std::unique_ptr<Expression> Parser::comparison() {
 	auto expr = term();
-	while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+	while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, EQUAL_EQUAL)) {
 		const auto op = previous().type();
 		auto right = term();
 		expr = std::make_unique<Binary_Expression>(std::move(expr), op, std::move(right));
