@@ -64,7 +64,7 @@ std::unique_ptr<Expression> Parser::unary() {
 	return primary();
 }
 
-// Highest precedance
+// Highest precedence
 std::unique_ptr<Expression> Parser::primary() {
 	if (match(FALSE)) return std::make_unique<Literal_Expression>(false);
 	if (match(TRUE)) return std::make_unique<Literal_Expression>(true);
