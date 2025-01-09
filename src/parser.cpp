@@ -13,6 +13,7 @@ std::unique_ptr<Expression> Parser::parse() {
 
 std::unique_ptr<Expression> Parser::expression() { return equality(); }
 
+// Lowest precedence
 std::unique_ptr<Expression> Parser::equality() {
 	auto expr = comparison();
 	while (match(BANG, BANG_EQUAL)) {
@@ -53,6 +54,7 @@ std::unique_ptr<Expression> Parser::factor() {
 	return std::move(expr);
 }
 
+// '-' is also a unary operator (negative numbers)
 std::unique_ptr<Expression> Parser::unary() {
 	if (match(BANG, MINUS)) {
 		const auto op = previous().type();
@@ -62,6 +64,7 @@ std::unique_ptr<Expression> Parser::unary() {
 	return primary();
 }
 
+// Highest precedance
 std::unique_ptr<Expression> Parser::primary() {
 	if (match(FALSE)) return std::make_unique<Literal_Expression>(false);
 	if (match(TRUE)) return std::make_unique<Literal_Expression>(true);
@@ -98,6 +101,7 @@ Token& Parser::consume(const Token_Type type, const char* message) {
 	throw std::runtime_error(message);
 }
 
+// Will skip parsing up to semicolon in case an error is encountered
 void Parser::synchronize() {
 	advance();
 	while (!is_at_end()) {
