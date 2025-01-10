@@ -5,6 +5,7 @@
 
 #include "token.hpp"
 #include "expression.hpp"
+#include "statement.hpp"
 
 #include <vector>
 
@@ -16,7 +17,10 @@ class Parser {
 	public:
 		explicit Parser(std::vector<Token>&& tokens)
 			:m_tokens(std::move(tokens)) {}
-		std::unique_ptr<Expression> parse();
+		std::vector<std::unique_ptr<Statement>> parse();
+		std::unique_ptr<Statement> statement();
+		std::unique_ptr<Statement> print_statement();
+		std::unique_ptr<Statement> expression_statement();
 		std::unique_ptr<Expression> expression();
 		std::unique_ptr<Expression> equality();
 		std::unique_ptr<Expression> comparison();

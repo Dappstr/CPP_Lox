@@ -22,5 +22,7 @@ add_executable(CPP_Lox
         src/parser.cpp
         src/interpreter.cpp
         include/interpreter.hpp
+        include/statement.hpp
+        src/statement.cpp
 )
 

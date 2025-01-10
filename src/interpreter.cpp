@@ -1,6 +1,30 @@
 #include "expression.hpp"
 #include "interpreter.hpp"
 
+void Interpreter::execute(const Statement &statement) { statement.accept(*this); }
+
+void Interpreter::interpret(const std::vector<std::unique_ptr<Statement>> &statements) {
+	for (const auto &statement : statements) {
+		execute(*statement);
+	}
+}
+
+void Interpreter::visit(const Expression_Statement &stmt) { auto value = evaluate(stmt.expression()); }
+
+void Interpreter::visit(const Print_Statement &stmt) {
+	if (const auto value = evaluate(stmt.expression()); value.has_value()) {
+		if (std::holds_alternative<std::string>(value.value())) {
+			std::cout << std::get<std::string>(*value) << '\n';
+		} else if (std::holds_alternative<double>(value.value())) {
+			std::cout << std::get<double>(*value) << '\n';
+		} else {
+			std::cout << std::boolalpha << std::get<bool>(*value) << '\n';
+		}
+	} else {
+		std::cout << "nil\n";
+	}
+}
+
 void Interpreter::interpret(const std::unique_ptr<Expression>& expression) {
 	if (const Value val = evaluate(*expression); std::holds_alternative<std::string>(*val)) {
 		std::cout << std::get<std::string>(*val) << '\n';

@@ -1,14 +1,40 @@
 #include "expression.hpp"
 #include "parser.hpp"
+#include "statement.hpp"
+#include <vector>
 
-std::unique_ptr<Expression> Parser::parse() {
-	try {
+std::vector<std::unique_ptr<Statement>> Parser::parse() {
+	/*try {
 		return expression();
 	} catch (const std::runtime_error& e) {
 		synchronize();
 		std::cout << e.what() << '\n';
 		return nullptr;
+	}*/
+	std::vector<std::unique_ptr<Statement>> statements;
+	while (!is_at_end()) {
+		statements.emplace_back(statement());
 	}
+	return statements;
+}
+
+std::unique_ptr<Statement> Parser::statement() {
+	if (match(PRINT)) {
+		return print_statement();
+	}
+	return expression_statement();
+}
+
+std::unique_ptr<Statement> Parser::print_statement() {
+	auto expr = expression();
+	consume(SEMICOLON, "Expected \';\' after value.");
+	return std::make_unique<Print_Statement>(std::move(expr));
+}
+
+std::unique_ptr<Statement> Parser::expression_statement() {
+	auto expr = expression();
+	consume(SEMICOLON, "Expected \';\' expression.");
+	return std::make_unique<Expression_Statement>(std::move(expr));
 }
 
 std::unique_ptr<Expression> Parser::expression() { return equality(); }
