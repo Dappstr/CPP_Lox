@@ -6,4 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(interpreter src/main.cpp
         include/token.hpp
         include/scanner.hpp
-        src/scanner.cpp)
+        src/scanner.cpp
+        include/expr.hpp
+        src/expr.cpp)

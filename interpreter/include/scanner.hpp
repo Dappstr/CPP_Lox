@@ -2,6 +2,8 @@
 #ifndef SCANNER_HPP
 #define SCANNER_HPP
 
+#pragma once
+
 #include "token.hpp"
 #include <map>
 

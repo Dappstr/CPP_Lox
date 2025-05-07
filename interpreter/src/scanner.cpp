@@ -140,7 +140,7 @@ void Scanner::number() {
 
 void Scanner::identifier() {
     while (!isAtEnd() && (isalnum(peek()) || peek() == '_')) { advance(); }
-    std::string str = m_src.substr(m_start, m_current - m_start);
+    const std::string str = m_src.substr(m_start, m_current - m_start);
     auto it = keywords.find(str);
     if (it == keywords.end()) {
         addToken(TokenType::IDENTIFIER, str);
