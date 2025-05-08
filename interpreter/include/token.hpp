@@ -58,6 +58,12 @@ class Token {
             out << '\n';
             return out;
         }
+
+        [[nodiscard]] const TokenType &type() const { return m_type; }
+        [[nodiscard]] const OptionalLiteral literal() const { return m_literal; }
+        [[nodiscard]] const std::string &lexeme() const { return m_lexeme; }
+        [[nodiscard]] const size_t line() const { return m_line; }
+
 };
 
 #endif //TOKEN_HPP

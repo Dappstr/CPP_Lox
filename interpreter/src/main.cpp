@@ -2,6 +2,8 @@
 #include <fstream>
 #include "../include/token.hpp"
 #include "../include/scanner.hpp"
+#include "../include/parser.hpp"
+#include "../include/ast_printer.hpp"
 
 static bool hadError = false;
 
@@ -44,13 +46,22 @@ void runPrompt() {
     }
 }
 
-
 void run(std::string&& src) {
     Scanner scanner(std::move(src));
     std::vector<Token> tokens = scanner.scan();
-    for (const auto& token : tokens) {
-        std::cout << token;
+
+    Parser parser(std::move(tokens));
+    std::shared_ptr<Expr> expression;
+
+    try {
+        expression = parser.parse();
+    }   catch (const std::exception& e) {
+        std::cerr << "Parser error: " << e.what() << '\n';
     }
+
+    Ast_Printer printer;
+    const std::string result = printer.print(expression);
+    std::cout << result << '\n';
 }
 
 int main(int argc, char *argv[]) {

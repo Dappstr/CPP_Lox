@@ -8,4 +8,7 @@ add_executable(interpreter src/main.cpp
         include/scanner.hpp
         src/scanner.cpp
         include/expr.hpp
-        src/expr.cpp)
+        include/parser.hpp
+        src/parser.cpp
+        include/ast_printer.hpp
+        src/ast_printer.cpp)
