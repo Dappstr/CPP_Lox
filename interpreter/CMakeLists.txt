@@ -11,4 +11,6 @@ add_executable(interpreter src/main.cpp
         include/parser.hpp
         src/parser.cpp
         include/ast_printer.hpp
-        src/ast_printer.cpp)
+        src/ast_printer.cpp
+        src/interpreter.cpp
+        include/interpreter.hpp)

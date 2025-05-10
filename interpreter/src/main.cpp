@@ -4,6 +4,7 @@
 #include "../include/scanner.hpp"
 #include "../include/parser.hpp"
 #include "../include/ast_printer.hpp"
+#include "../include/interpreter.hpp"
 
 static bool hadError = false;
 
@@ -59,9 +60,25 @@ void run(std::string&& src) {
         std::cerr << "Parser error: " << e.what() << '\n';
     }
 
-    Ast_Printer printer;
-    const std::string result = printer.print(expression);
-    std::cout << result << '\n';
+    // Ast_Printer printer;
+    // const std::string result = printer.print(expression);
+    // std::cout << result << '\n';
+
+    Interpreter interpreter;
+    try {
+        OptionalLiteral literal = interpreter.interpret(expression);
+        if (!literal.has_value()) {
+            std::cout << "nil\n";
+        } else if (std::holds_alternative<double>(literal.value())) {
+            std::cout << std::get<double>(literal.value()) << '\n';
+        } else if (std::holds_alternative<std::string>(literal.value())) {
+            std::cout << std::get<std::string>(literal.value()) << '\n';
+        } else if (std::holds_alternative<bool>(literal.value())) {
+            std::cout << std::boolalpha << std::get<bool>(literal.value()) << '\n';
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Runtime error: " << e.what() << '\n';
+    }
 }
 
 int main(int argc, char *argv[]) {
