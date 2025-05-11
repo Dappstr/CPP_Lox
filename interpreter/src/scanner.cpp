@@ -145,7 +145,16 @@ void Scanner::identifier() {
     if (it == keywords.end()) {
         addToken(TokenType::IDENTIFIER, str);
     } else {
-        addNullToken(it->second);
+        if (it->second == TokenType::TRUE) {
+            addToken(TokenType::TRUE, true);
+        } else if (it->second == TokenType::FALSE) {
+            addToken(TokenType::FALSE, false);
+        } else if (it->second == TokenType::NIL) {
+            addToken(TokenType::NIL, std::nullopt);
+        } else {
+            addNullToken(it->second);
+        }
+
     }
 }
 

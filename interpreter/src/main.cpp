@@ -42,6 +42,7 @@ void runPrompt() {
         std::getline(std::cin, input);
 
         if (input == "quit" || input == "exit") break;
+        if (input.empty()) continue; // Skip blank lines
 
         run(std::move(input));
     }
@@ -52,30 +53,17 @@ void run(std::string&& src) {
     std::vector<Token> tokens = scanner.scan();
 
     Parser parser(std::move(tokens));
-    std::shared_ptr<Expr> expression;
+    std::vector<std::shared_ptr<Stmt>> statements;
 
     try {
-        expression = parser.parse();
+        statements = parser.parse();
     }   catch (const std::exception& e) {
         std::cerr << "Parser error: " << e.what() << '\n';
     }
 
-    // Ast_Printer printer;
-    // const std::string result = printer.print(expression);
-    // std::cout << result << '\n';
-
     Interpreter interpreter;
     try {
-        OptionalLiteral literal = interpreter.interpret(expression);
-        if (!literal.has_value()) {
-            std::cout << "nil\n";
-        } else if (std::holds_alternative<double>(literal.value())) {
-            std::cout << std::get<double>(literal.value()) << '\n';
-        } else if (std::holds_alternative<std::string>(literal.value())) {
-            std::cout << std::get<std::string>(literal.value()) << '\n';
-        } else if (std::holds_alternative<bool>(literal.value())) {
-            std::cout << std::boolalpha << std::get<bool>(literal.value()) << '\n';
-        }
+        interpreter.interpret(statements);
     } catch (const std::exception& e) {
         std::cerr << "Runtime error: " << e.what() << '\n';
     }

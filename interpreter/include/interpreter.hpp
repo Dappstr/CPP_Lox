@@ -3,15 +3,19 @@
 #define INTERPRETER_HPP
 
 #include "expr.hpp"
+#include "statement.hpp"
 #include "token.hpp"
 
-class Interpreter : public Expr_Visitor {
+class Interpreter : public Expr_Visitor, public Stmt_Visitor {
     public:
-        OptionalLiteral interpret(const std::shared_ptr<Expr>& expr);
+        void interpret(const std::vector<std::shared_ptr<Stmt>>& statements);
         void visitLiteralExpr(const Literal_Expr &expr) override;
         void visitUnaryExpr(const Unary_Expr &expr) override;
         void visitBinaryExpr(const Binary_Expr &expr) override;
         void visitGroupingExpr(const Grouping_Expr &expr) override;
+        void visitVarStmt(const Var_Stmt &stmt) override;
+        void visitPrintStmt(const Print_Stmt &stmt) override;
+        void visitExpressionStmt(const Expression_Stmt &stmt) override;
 
     private:
         OptionalLiteral m_result{};

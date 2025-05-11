@@ -6,11 +6,19 @@
 
 #include "token.hpp"
 #include "expr.hpp"
+#include "statement.hpp"
 
 class Parser {
     private:
         std::vector<Token> m_tokens;
         size_t m_pos {};
+
+        std::shared_ptr<Stmt> declaration();
+        std::shared_ptr<Stmt> statement();
+        std::shared_ptr<Stmt> print_statement();
+        std::shared_ptr<Stmt> expression_statement();
+        std::shared_ptr<Stmt> var_declaration();
+        void synchronize();
 
         std::shared_ptr<Expr> expression();
         std::shared_ptr<Expr> equality();
@@ -28,11 +36,13 @@ class Parser {
         [[nodiscard]] bool is_at_end() const;
         const Token& peek() const;
         const Token& previous() const;
+        const Token& consume(TokenType type, const std::string& message);
+
 
     public:
         explicit Parser(std::vector<Token>&& tokens)
             :m_tokens(std::move(tokens)) {}
-        std::shared_ptr<Expr> parse();
+        std::vector<std::shared_ptr<Stmt>> parse();
 };
 
 #endif //PARSER_HPP

@@ -1,15 +1,20 @@
 #include "../include/interpreter.hpp"
 
-OptionalLiteral Interpreter::interpret(const std::shared_ptr<Expr> &expr) {
-    expr->accept(*this);
-    return m_result;
+#include "../include/statement.hpp"
+
+void Interpreter::interpret(const std::vector<std::shared_ptr<Stmt>>& statements) {
+    // expr->accept(*this);
+    // return m_result;
+    for (const auto& stmt: statements) {
+        stmt->accept(*this);
+    }
 }
 
 void Interpreter::visitLiteralExpr(const Literal_Expr &expr) { m_result = expr.m_value; }
 
 void Interpreter::visitUnaryExpr(const Unary_Expr &expr) {
     expr.m_operand->accept(*this);
-    OptionalLiteral right = m_result;
+    const OptionalLiteral right = m_result;
 
     switch (expr.m_op.type()) {
         case TokenType::MINUS:{
@@ -91,10 +96,10 @@ void Interpreter::visitBinaryExpr(const Binary_Expr &expr) {
         if (std::holds_alternative<double>(*left) && std::holds_alternative<double>(*right)) {
             const double l = std::get<double>(*left);
             const double r = std::get<double>(*right);
-            if (type == TokenType::GREATER) { m_result = l > r; }
-            else if (type == TokenType::LESS) { m_result = l >= r; }
-            else if (type == TokenType::LESS) { m_result = l < r; }
-            else m_result = l <= r;
+            if (type == TokenType::GREATER)        m_result = l > r;
+            else if (type == TokenType::GREATER_EQUAL) m_result = l >= r;
+            else if (type == TokenType::LESS)          m_result = l < r;
+            else if (type == TokenType::LESS_EQUAL)    m_result = l <= r;
         } else if (std::holds_alternative<std::string>(*left) && std::holds_alternative<std::string>(*right)) {
             const auto l = std::get<std::string>(*left);
             const auto r = std::get<std::string>(*right);
@@ -114,6 +119,35 @@ void Interpreter::visitGroupingExpr(const Grouping_Expr &expr) {
     } else {
         expr.m_exprs.front()->accept(*this);
     }
+}
+
+void Interpreter::visitVarStmt(const Var_Stmt &stmt) {
+    throw std::runtime_error("Not implemented.");
+}
+
+void Interpreter::visitPrintStmt(const Print_Stmt& stmt) {
+    stmt.m_expression->accept(*this);
+
+    if (const OptionalLiteral value = m_result; !value.has_value()) {
+        std::cout << "nil\n";
+    } else if (std::holds_alternative<double>(*value)) {
+        std::cout << std::get<double>(*value) << '\n';
+    } else if (std::holds_alternative<std::string>(*value)) {
+        std::cout << std::get<std::string>(*value) << '\n';
+    } else if (std::holds_alternative<bool>(*value)) {
+        std::cout << std::boolalpha << std::get<bool>(*value) << '\n';
+    } else {
+        std::cout << "[ERROR] Unknown literal type.\n";
+    }
+}
+
+void Interpreter::visitExpressionStmt(const Expression_Stmt &stmt) {
+    if (!stmt.m_expression) {
+        std::cerr << "[ERROR] Null expression in Expression_Stmt.\n";
+        return;
+    }
+    stmt.m_expression->accept(*this);
+    m_result = std::nullopt;
 }
 
 bool Interpreter::isTruthy(const OptionalLiteral &val) {
