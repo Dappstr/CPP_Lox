@@ -5,8 +5,6 @@
 #include <stdexcept>
 #include <vector>
 
-class Binary_Expr;
-
 // std::shared_ptr<Expr> Parser::parse() { return expression(); }
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;
@@ -34,7 +32,6 @@ std::shared_ptr<Stmt> Parser::declaration() {
         return nullptr;
     }
 }
-
 
 std::shared_ptr<Stmt> Parser::var_declaration() {
     Token name = consume(TokenType::IDENTIFIER, "Expected a variable name.");
@@ -92,7 +89,7 @@ std::shared_ptr<Expr> Parser::expression() {
 
 std::shared_ptr<Expr> Parser::equality() {
     auto expr = comparison();
-    while (match(TokenType::BANG_EQUAL, TokenType::EQUAL)) {
+    while (match(TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL)) {
         Token op = previous();
         auto right = comparison();
         expr = std::make_shared<Binary_Expr>(expr, op, right);
@@ -157,7 +154,7 @@ std::shared_ptr<Expr> Parser::primary() {
     }
 
     if (match(TokenType::LEFT_PAREN)) {
-        auto expr = expression();
+        const auto expr = expression();
         if (!match(TokenType::RIGHT_PAREN)) {
             throw std::runtime_error("Expected ')' after expression.");
         }

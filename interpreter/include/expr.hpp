@@ -21,7 +21,6 @@ class Expr_Visitor {
         virtual void visitLiteralExpr(const Literal_Expr& expr) = 0;
         virtual void visitUnaryExpr(const Unary_Expr& expr) = 0;
         virtual ~Expr_Visitor() = default;
-
 };
 
 class Expr {

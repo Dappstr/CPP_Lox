@@ -3,7 +3,6 @@
 #include "../include/token.hpp"
 #include "../include/scanner.hpp"
 #include "../include/parser.hpp"
-#include "../include/ast_printer.hpp"
 #include "../include/interpreter.hpp"
 
 static bool hadError = false;
