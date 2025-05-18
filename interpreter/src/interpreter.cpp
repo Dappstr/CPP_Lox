@@ -122,7 +122,12 @@ void Interpreter::visitGroupingExpr(const Grouping_Expr &expr) {
 }
 
 void Interpreter::visitVarStmt(const Var_Stmt &stmt) {
-    throw std::runtime_error("Not implemented.");
+    OptionalLiteral value = std::nullopt;
+    if (stmt.m_value) {
+        stmt.m_value->accept(*this);
+        value = m_result;
+    }
+    m_environment->define(stmt.m_name.lexeme(), value);
 }
 
 void Interpreter::visitPrintStmt(const Print_Stmt& stmt) {
@@ -150,6 +155,11 @@ void Interpreter::visitExpressionStmt(const Expression_Stmt &stmt) {
     m_result = std::nullopt;
 }
 
+void Interpreter::visitVariableExpr(const Variable_Expr& expr) {
+    m_result = m_environment->get(expr.m_name);
+}
+
+
 bool Interpreter::isTruthy(const OptionalLiteral &val) {
     if (!val.has_value()) { return false; }
     if (std::holds_alternative<bool>(val.value())) { return std::get<bool>(val.value()); }
@@ -160,4 +170,30 @@ bool Interpreter::isEqual(const OptionalLiteral &lhs, const OptionalLiteral &rhs
     if (!lhs.has_value() || !rhs.has_value()) { return false; }
     if (!lhs.has_value() && !rhs.has_value()) { return true; }
     return lhs.value() == rhs.value();
+}
+
+void Interpreter::visitBlockStmt(const Block_Stmt &stmt) {
+    auto new_env = std::make_shared<Environment>(m_environment);
+    executeBlock(stmt.m_statements, new_env);
+}
+
+void Interpreter::executeBlock(const std::vector<std::shared_ptr<Stmt> > &statements, std::shared_ptr<Environment> new_env) {
+    auto previous = m_environment;
+    try {
+        m_environment = new_env;
+        for (const auto &stmt : statements) {
+            if (stmt) stmt->accept(*this);
+        }
+    } catch (...) {
+        m_environment = previous;
+        throw;
+    }
+    m_environment = previous;
+}
+
+void Interpreter::visitAssignExpr(const Assign_Expr &expr) {
+    expr.m_value->accept(*this);
+    const OptionalLiteral value = m_result;
+    m_environment->define(expr.m_name.lexeme(), value);
+    m_result = value;
 }

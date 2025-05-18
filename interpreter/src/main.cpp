@@ -7,7 +7,7 @@
 
 static bool hadError = false;
 
-void run(std::string&& src);
+void run(std::string&& src, Interpreter& interpreter);
 
 void report(const size_t line, const char *where, const char *msg) {
     std::cerr << "[ line " << line << "] Error: "<< where << ": " << msg << '\n';
@@ -18,7 +18,6 @@ void error(const size_t line, const char* msg) {
     report(line, "", msg);
 }
 
-// Get in the data from the file and store it in a string
 void runFile(const char* path) {
     if (std::fstream file(path, std::ios::in); !file.is_open()) {
         std::cerr << "Failed to open file " << path << '\n';
@@ -30,11 +29,15 @@ void runFile(const char* path) {
         file.read(&contents[0], size);
         file.close();
 
-        run(std::move(contents));
+        Interpreter interpreter;
+        run(std::move(contents), interpreter);
     }
 }
 
+
 void runPrompt() {
+    Interpreter interpreter;
+
     std::string input;
     while (true) {
         std::cout << "> ";
@@ -43,11 +46,11 @@ void runPrompt() {
         if (input == "quit" || input == "exit") break;
         if (input.empty()) continue; // Skip blank lines
 
-        run(std::move(input));
+        run(std::move(input), interpreter);
     }
 }
 
-void run(std::string&& src) {
+void run(std::string&& src, Interpreter& interpreter) {
     Scanner scanner(std::move(src));
     std::vector<Token> tokens = scanner.scan();
 
@@ -56,17 +59,21 @@ void run(std::string&& src) {
 
     try {
         statements = parser.parse();
-    }   catch (const std::exception& e) {
+        if (statements.empty()) {
+            return;
+        }
+    } catch (const std::exception& e) {
         std::cerr << "Parser error: " << e.what() << '\n';
+        return;
     }
 
-    Interpreter interpreter;
     try {
         interpreter.interpret(statements);
     } catch (const std::exception& e) {
         std::cerr << "Runtime error: " << e.what() << '\n';
     }
 }
+
 
 int main(int argc, char *argv[]) {
     if (argc > 2) {

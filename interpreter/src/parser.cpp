@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <vector>
 
-// std::shared_ptr<Expr> Parser::parse() { return expression(); }
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;
     while (!is_at_end()) {
@@ -28,6 +27,7 @@ std::shared_ptr<Stmt> Parser::declaration() {
         if (match(TokenType::VAR)) return var_declaration();
         return statement();
     } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
         synchronize();
         return nullptr;
     }
@@ -84,8 +84,26 @@ void Parser::synchronize() {
 }
 
 std::shared_ptr<Expr> Parser::expression() {
-    return equality();
+    return assignment();
 }
+
+std::shared_ptr<Expr> Parser::assignment() {
+    auto expr = equality();
+
+    if (match(TokenType::EQUAL)) {
+        Token equals = previous();
+        auto value = assignment();  // right-associative
+
+        if (auto var = std::dynamic_pointer_cast<Variable_Expr>(expr)) {
+            return std::make_shared<Assign_Expr>(var->m_name, value);
+        }
+
+        throw std::runtime_error("Invalid assignment target.");
+    }
+
+    return expr;
+}
+
 
 std::shared_ptr<Expr> Parser::equality() {
     auto expr = comparison();
@@ -137,30 +155,41 @@ std::shared_ptr<Expr> Parser::unary() {
 }
 
 std::shared_ptr<Expr> Parser::primary() {
-    if (match(TokenType::FALSE)) return std::make_shared<Literal_Expr>(false);
-    if (match(TokenType::TRUE)) return std::make_shared<Literal_Expr>(true);
-    if (match(TokenType::NIL)) return std::make_shared<Literal_Expr>(std::nullopt);
+    if (match(TokenType::FALSE)) {
+        return std::make_shared<Literal_Expr>(false);
+    }
+
+    if (match(TokenType::TRUE)) {
+        return std::make_shared<Literal_Expr>(true);
+    }
+
+    if (match(TokenType::NIL)) {
+        return std::make_shared<Literal_Expr>(std::nullopt);
+    }
 
     if (match(TokenType::NUMBER, TokenType::STRING)) {
-        const auto& tok = previous();
-        // std::cout << "[DEBUG] matched token: " << tok.lexeme() << ", type: " << static_cast<int>(tok.type()) << "\n";
-
+        const Token& tok = previous();
         if (!tok.literal().has_value()) {
-            std::cerr << "[FATAL] Token has no literal!\n";
-            exit(1);
+            throw std::runtime_error("Literal token has no value.");
         }
-
         return std::make_shared<Literal_Expr>(tok.literal().value());
     }
 
     if (match(TokenType::LEFT_PAREN)) {
-        const auto expr = expression();
-        if (!match(TokenType::RIGHT_PAREN)) {
-            throw std::runtime_error("Expected ')' after expression.");
-        }
+        std::shared_ptr<Expr> expr = expression();
+        consume(TokenType::RIGHT_PAREN, "Expected ')' after expression.");
         return std::make_shared<Grouping_Expr>(std::vector<std::shared_ptr<Expr>>{expr});
     }
-    throw std::runtime_error("Unexpected expression.");
+
+    if (match(TokenType::IDENTIFIER)) {
+        return std::make_shared<Variable_Expr>(previous());
+    }
+
+    if (peek().type() == TokenType::EndOfFile) {
+        throw std::runtime_error("Unexpected end of input. Perhaps you forgot a semicolon?");
+    }
+
+    throw std::runtime_error("Unexpected expression near: '" + peek().lexeme() + "'");
 }
 
 bool Parser::check(const TokenType &type) const {
@@ -168,10 +197,12 @@ bool Parser::check(const TokenType &type) const {
 }
 
 const Token & Parser::advance() { if (!is_at_end()) { m_pos += 1;} return previous();}
-bool Parser::is_at_end() const { return m_pos >= m_tokens.size(); }
+bool Parser::is_at_end() const { return peek().type() == TokenType::EndOfFile; }
 const Token & Parser::peek() const { return m_tokens.at(m_pos); }
 const Token & Parser::previous() const { return m_tokens.at(m_pos - 1); }
 const Token& Parser::consume(TokenType type, const std::string& message) {
     if (check(type)) return advance();
-    throw std::runtime_error(message);
+    throw std::runtime_error("Line " + std::to_string(peek().line()) + ": " + message +
+                             " (found '" + peek().lexeme() + "')");
 }
+

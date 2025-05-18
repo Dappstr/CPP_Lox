@@ -13,6 +13,8 @@ class Binary_Expr;
 class Grouping_Expr;
 class Literal_Expr;
 class Unary_Expr;
+class Variable_Expr;
+class Assign_Expr;
 
 class Expr_Visitor {
     public:
@@ -20,6 +22,8 @@ class Expr_Visitor {
         virtual void visitGroupingExpr(const Grouping_Expr& expr) = 0;
         virtual void visitLiteralExpr(const Literal_Expr& expr) = 0;
         virtual void visitUnaryExpr(const Unary_Expr& expr) = 0;
+        virtual void visitVariableExpr(const Variable_Expr& expr) = 0;
+        virtual void visitAssignExpr(const Assign_Expr& expr) = 0;
         virtual ~Expr_Visitor() = default;
 };
 
@@ -73,6 +77,25 @@ public:
     void accept(Expr_Visitor &visitor) const override {
         visitor.visitUnaryExpr(*this);
     }
+};
+
+class Variable_Expr final : public Expr {
+    public:
+        Token m_name;
+        explicit Variable_Expr(Token name) : m_name(std::move(name)) {}
+        void accept(Expr_Visitor &visitor) const override { visitor.visitVariableExpr(*this); }
+};
+
+class Assign_Expr final : public Expr {
+    public:
+        Token m_name;
+        std::shared_ptr<Expr> m_value;
+
+        Assign_Expr(Token name, std::shared_ptr<Expr> value) : m_name(std::move(name)), m_value(std::move(value)) {}
+
+        void accept(Expr_Visitor &visitor) const override {
+            visitor.visitAssignExpr(*this);
+        }
 };
 
 #endif //EXPR_HPP
