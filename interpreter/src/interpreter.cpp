@@ -155,10 +155,7 @@ void Interpreter::visitExpressionStmt(const Expression_Stmt &stmt) {
     m_result = std::nullopt;
 }
 
-void Interpreter::visitVariableExpr(const Variable_Expr& expr) {
-    m_result = m_environment->get(expr.m_name);
-}
-
+void Interpreter::visitVariableExpr(const Variable_Expr& expr) { m_result = m_environment->get(expr.m_name); }
 
 bool Interpreter::isTruthy(const OptionalLiteral &val) {
     if (!val.has_value()) { return false; }
@@ -194,6 +191,24 @@ void Interpreter::executeBlock(const std::vector<std::shared_ptr<Stmt> > &statem
 void Interpreter::visitAssignExpr(const Assign_Expr &expr) {
     expr.m_value->accept(*this);
     const OptionalLiteral value = m_result;
-    m_environment->define(expr.m_name.lexeme(), value);
+    m_environment->assign(expr.m_name, value);
     m_result = value;
+}
+
+void Interpreter::visitIfStmt(const If_Stmt &stmt) {
+    stmt.m_condition->accept(*this);
+    if (isTruthy(m_result)) {
+        stmt.m_then_branch->accept(*this);
+    } else if (stmt.m_else_branch) {
+        stmt.m_else_branch->accept(*this);
+    }
+}
+
+void Interpreter::visitWhileStmt(const While_Stmt &stmt) {
+    while (true) {
+        stmt.m_condition->accept(*this);
+        if (!isTruthy(m_result)) { break; }
+
+        stmt.m_body->accept(*this);
+    }
 }

@@ -21,6 +21,8 @@ class Interpreter : public Expr_Visitor, public Stmt_Visitor {
         void visitBlockStmt(const Block_Stmt &stmt) override;
         void executeBlock(const std::vector<std::shared_ptr<Stmt>>& statements, std::shared_ptr<Environment> new_env);
         void visitAssignExpr(const Assign_Expr &expr) override;
+        void visitIfStmt(const If_Stmt &stmt) override;
+        void visitWhileStmt(const While_Stmt &stmt) override;
 
     private:
         OptionalLiteral m_result{};

@@ -9,6 +9,8 @@ class Expression_Stmt;
 class Print_Stmt;
 class Var_Stmt;
 class Block_Stmt;
+class If_Stmt;
+class While_Stmt;
 
 class Stmt_Visitor {
     public:
@@ -16,6 +18,8 @@ class Stmt_Visitor {
         virtual void visitPrintStmt(const Print_Stmt& stmt) = 0;
         virtual void visitVarStmt(const Var_Stmt& stmt) = 0;
         virtual void visitBlockStmt(const Block_Stmt& stmt) = 0;
+        virtual void visitIfStmt(const If_Stmt& stmt) = 0;
+        virtual void visitWhileStmt(const While_Stmt& stmt) = 0;
         virtual ~Stmt_Visitor() = default;
 };
 
@@ -52,6 +56,27 @@ class Block_Stmt : public Stmt {
         std::vector<std::shared_ptr<Stmt>> m_statements;
         explicit Block_Stmt(std::vector<std::shared_ptr<Stmt>> statements) : m_statements(std::move(statements)) {}
         void accept(Stmt_Visitor& visitor) override { visitor.visitBlockStmt(*this); }
+};
+
+class If_Stmt : public Stmt {
+    public:
+    std::shared_ptr<Expr> m_condition;
+    std::shared_ptr<Stmt> m_then_branch;
+    std::shared_ptr<Stmt> m_else_branch;
+
+    If_Stmt(std::shared_ptr<Expr> condition, std::shared_ptr<Stmt> then_branch, std::shared_ptr<Stmt> else_branch)
+        :m_condition(std::move(condition)), m_then_branch(std::move(then_branch)), m_else_branch(std::move(else_branch)) {}
+    void accept(Stmt_Visitor& visitor) override { visitor.visitIfStmt(*this); }
+};
+
+class While_Stmt : public Stmt {
+    public:
+        std::shared_ptr<Expr> m_condition;
+        std::shared_ptr<Stmt> m_body;
+
+        While_Stmt(std::shared_ptr<Expr> condition, std::shared_ptr<Stmt> body)
+            :m_condition(std::move(condition)), m_body(std::move(body)) {}
+        void accept(Stmt_Visitor& visitor) override { visitor.visitWhileStmt(*this); }
 };
 
 #endif // STATEMENT_HPP

@@ -44,8 +44,33 @@ std::shared_ptr<Stmt> Parser::var_declaration() {
     return std::make_shared<Var_Stmt>(name, initializer);
 }
 
+std::shared_ptr<Stmt> Parser::if_statement() {
+    consume(TokenType::LEFT_PAREN, "Expected '(' after if statement.");
+    auto condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after if statement.");
+
+    auto then_branch = statement();
+    std::shared_ptr<Stmt> else_branch = nullptr;
+
+    if (match(TokenType::ELSE)) {
+        else_branch = statement();
+    }
+    return std::make_shared<If_Stmt>(condition, then_branch, else_branch);
+}
+
+std::shared_ptr<Stmt> Parser::while_statement() {
+    consume(TokenType::LEFT_PAREN, "Expected '(' after while statement.");
+    auto condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after while statement.");
+    auto body = statement();
+    return std::make_shared<While_Stmt>(condition, body);
+}
+
 std::shared_ptr<Stmt> Parser::statement() {
     if (match(TokenType::PRINT)) { return print_statement(); }
+    if (match(TokenType::IF)) { return if_statement(); }
+    if (match(TokenType::WHILE)) { return while_statement(); }
+    if (match(TokenType::LEFT_BRACE)) { return std::make_shared<Block_Stmt>(block_statement()); }
     return expression_statement();
 }
 
@@ -59,6 +84,19 @@ std::shared_ptr<Stmt> Parser::expression_statement() {
     std::shared_ptr<Expr> expr = expression();
     consume(TokenType::SEMICOLON, "Expected ';' after expression.");
     return std::make_shared<Expression_Stmt>(expr);
+}
+
+std::vector<std::shared_ptr<Stmt>>Parser::block_statement() {
+    std::vector<std::shared_ptr<Stmt>> statements;
+
+    while (!check(TokenType::RIGHT_BRACE) && !is_at_end()) {
+        auto stmt = declaration();
+        if (stmt) {
+            statements.push_back(stmt);
+        }
+    }
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after block.");
+    return statements;
 }
 
 void Parser::synchronize() {
@@ -196,10 +234,10 @@ bool Parser::check(const TokenType &type) const {
     return !is_at_end() && peek().type() == type;
 }
 
-const Token & Parser::advance() { if (!is_at_end()) { m_pos += 1;} return previous();}
+const Token& Parser::advance() { if (!is_at_end()) { m_pos += 1;} return previous();}
 bool Parser::is_at_end() const { return peek().type() == TokenType::EndOfFile; }
-const Token & Parser::peek() const { return m_tokens.at(m_pos); }
-const Token & Parser::previous() const { return m_tokens.at(m_pos - 1); }
+const Token& Parser::peek() const { return m_tokens.at(m_pos); }
+const Token& Parser::previous() const { return m_tokens.at(m_pos - 1); }
 const Token& Parser::consume(TokenType type, const std::string& message) {
     if (check(type)) return advance();
     throw std::runtime_error("Line " + std::to_string(peek().line()) + ": " + message +
