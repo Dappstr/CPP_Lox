@@ -20,6 +20,7 @@ class Parser {
         std::shared_ptr<Stmt> var_declaration();
         std::shared_ptr<Stmt> if_statement();
         std::shared_ptr<Stmt> while_statement();
+        std::shared_ptr<Stmt> for_statement();
         std::vector<std::shared_ptr<Stmt>> block_statement();
         void synchronize();
 

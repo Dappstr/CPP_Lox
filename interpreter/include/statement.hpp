@@ -11,6 +11,7 @@ class Var_Stmt;
 class Block_Stmt;
 class If_Stmt;
 class While_Stmt;
+class For_Stmt;
 
 class Stmt_Visitor {
     public:
@@ -20,6 +21,7 @@ class Stmt_Visitor {
         virtual void visitBlockStmt(const Block_Stmt& stmt) = 0;
         virtual void visitIfStmt(const If_Stmt& stmt) = 0;
         virtual void visitWhileStmt(const While_Stmt& stmt) = 0;
+        virtual void visitForStmt(const For_Stmt& stmt) = 0;
         virtual ~Stmt_Visitor() = default;
 };
 
@@ -77,6 +79,19 @@ class While_Stmt : public Stmt {
         While_Stmt(std::shared_ptr<Expr> condition, std::shared_ptr<Stmt> body)
             :m_condition(std::move(condition)), m_body(std::move(body)) {}
         void accept(Stmt_Visitor& visitor) override { visitor.visitWhileStmt(*this); }
+};
+
+class For_Stmt : public Stmt {
+    public:
+        std::shared_ptr<Stmt> m_initializer;
+        std::shared_ptr<Expr> m_condition;
+        std::shared_ptr<Expr> m_step;
+        std::shared_ptr<Stmt> m_body;
+
+        For_Stmt(std::shared_ptr<Stmt> initializer, std::shared_ptr<Expr> condition, std::shared_ptr<Expr> step, std::shared_ptr<Stmt> body)
+            :m_initializer(std::move(initializer)), m_condition(std::move(condition)), m_step(std::move(step)), m_body(std::move(body)) {}
+
+        void accept(Stmt_Visitor& visitor) override { visitor.visitForStmt(*this); }
 };
 
 #endif // STATEMENT_HPP

@@ -66,10 +66,39 @@ std::shared_ptr<Stmt> Parser::while_statement() {
     return std::make_shared<While_Stmt>(condition, body);
 }
 
+std::shared_ptr<Stmt> Parser::for_statement() {
+    consume(TokenType::LEFT_PAREN, "Expected '(' after for statement.");
+
+    std::shared_ptr<Stmt> initializer;
+    if (match(TokenType::SEMICOLON)) {
+        initializer = nullptr;
+    } else if (match(TokenType::VAR)) {
+        initializer = var_declaration();
+    } else {
+        initializer = expression_statement();
+    }
+
+    std::shared_ptr<Expr> condition = nullptr;
+    if (!check(TokenType::SEMICOLON)) {
+        condition = expression();
+    }
+    consume(TokenType::SEMICOLON, "Expected ';' after loop condition.");
+
+
+    std::shared_ptr<Expr> step = nullptr;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        step = expression();
+    }
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after loop condition.");
+    std::shared_ptr<Stmt> body = statement();
+    return std::make_shared<For_Stmt>(initializer, condition, step, body);
+}
+
 std::shared_ptr<Stmt> Parser::statement() {
     if (match(TokenType::PRINT)) { return print_statement(); }
     if (match(TokenType::IF)) { return if_statement(); }
     if (match(TokenType::WHILE)) { return while_statement(); }
+    if (match(TokenType::FOR)) { return for_statement(); }
     if (match(TokenType::LEFT_BRACE)) { return std::make_shared<Block_Stmt>(block_statement()); }
     return expression_statement();
 }
@@ -142,7 +171,6 @@ std::shared_ptr<Expr> Parser::assignment() {
     return expr;
 }
 
-
 std::shared_ptr<Expr> Parser::equality() {
     auto expr = comparison();
     while (match(TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL)) {
@@ -184,7 +212,7 @@ std::shared_ptr<Expr> Parser::factor() {
 }
 
 std::shared_ptr<Expr> Parser::unary() {
-    if (match(TokenType::BANG, TokenType::MINUS)) {
+    if (match(TokenType::BANG, TokenType::MINUS, TokenType::INCREMENT, TokenType::DECREMENT)) {
         Token op = previous();
         auto right = unary();
         return std::make_shared<Unary_Expr>(right, op);
@@ -214,7 +242,7 @@ std::shared_ptr<Expr> Parser::primary() {
     }
 
     if (match(TokenType::LEFT_PAREN)) {
-        std::shared_ptr<Expr> expr = expression();
+        const std::shared_ptr<Expr> expr = expression();
         consume(TokenType::RIGHT_PAREN, "Expected ')' after expression.");
         return std::make_shared<Grouping_Expr>(std::vector<std::shared_ptr<Expr>>{expr});
     }

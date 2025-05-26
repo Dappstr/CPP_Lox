@@ -23,6 +23,7 @@ class Interpreter : public Expr_Visitor, public Stmt_Visitor {
         void visitAssignExpr(const Assign_Expr &expr) override;
         void visitIfStmt(const If_Stmt &stmt) override;
         void visitWhileStmt(const While_Stmt &stmt) override;
+        void visitForStmt(const For_Stmt &stmt) override;
 
     private:
         OptionalLiteral m_result{};

@@ -1,10 +1,10 @@
+#include <utility>
+
 #include "../include/interpreter.hpp"
 
 #include "../include/statement.hpp"
 
 void Interpreter::interpret(const std::vector<std::shared_ptr<Stmt>>& statements) {
-    // expr->accept(*this);
-    // return m_result;
     for (const auto& stmt: statements) {
         stmt->accept(*this);
     }
@@ -28,6 +28,24 @@ void Interpreter::visitUnaryExpr(const Unary_Expr &expr) {
             m_result = isTruthy(right);
             break;
         }
+        case TokenType::INCREMENT:
+        case TokenType::DECREMENT: {
+            auto var_expr = std::dynamic_pointer_cast<Variable_Expr>(expr.m_operand);
+            if (!var_expr) {
+                throw std::runtime_error(R"(Invalid operand for either '++' or '--', must be a variable.)");
+            }
+            OptionalLiteral value = m_environment->get(var_expr->m_name);
+            if (!value || !std::holds_alternative<double>(*value)) {
+                throw std::runtime_error(R"(Invalid operand for either '++' or '--', must be a variable.)");
+            }
+
+            const double delta = (expr.m_op.type() == TokenType::INCREMENT) ? 1.0 : -1.0;
+            double result = std::get<double>(*value) + delta;
+
+            m_environment->assign(var_expr->m_name, result);
+            m_result = result;
+            break;
+        }
         default:
             throw std::runtime_error("Invalid unary operator");
     }
@@ -41,9 +59,7 @@ void Interpreter::visitBinaryExpr(const Binary_Expr &expr) {
 
     const auto type = expr.m_op.type();
 
-    if (!left || !right) {
-        throw std::runtime_error("Operands must not be nil.");
-    }
+    if (!left || !right) { throw std::runtime_error("Operands must not be nil."); }
 
     if (type == TokenType::EQUAL_EQUAL || type == TokenType::BANG_EQUAL) {
         bool eq = isEqual(left, right);
@@ -63,7 +79,7 @@ void Interpreter::visitBinaryExpr(const Binary_Expr &expr) {
     if (type == TokenType::STAR) {
         if (std::holds_alternative<std::string>(*left) && std::holds_alternative<double>(*right)) {
             const double times = std::get<double>(*right);
-            std::string str = std::get<std::string>(*left);
+            auto str = std::get<std::string>(*left);
             std::string result;
             for (size_t i = 0; i < times; i++) { result += str; }
             m_result = result;
@@ -177,7 +193,7 @@ void Interpreter::visitBlockStmt(const Block_Stmt &stmt) {
 void Interpreter::executeBlock(const std::vector<std::shared_ptr<Stmt> > &statements, std::shared_ptr<Environment> new_env) {
     auto previous = m_environment;
     try {
-        m_environment = new_env;
+        m_environment = std::move(new_env);
         for (const auto &stmt : statements) {
             if (stmt) stmt->accept(*this);
         }
@@ -211,4 +227,33 @@ void Interpreter::visitWhileStmt(const While_Stmt &stmt) {
 
         stmt.m_body->accept(*this);
     }
+}
+
+void Interpreter::visitForStmt(const For_Stmt &stmt) {
+    auto loop_env = std::make_shared<Environment>(m_environment);
+    auto previous = m_environment;
+    m_environment = loop_env;
+
+    if (stmt.m_initializer) {
+        stmt.m_initializer->accept(*this);
+        if (const auto var_stmt = std::dynamic_pointer_cast<Var_Stmt>(stmt.m_initializer)) {
+            const std::string name = var_stmt->m_name.lexeme();
+            OptionalLiteral value = m_environment->get(var_stmt->m_name);
+
+            if (!value.has_value() || !std::holds_alternative<double>(value.value())) {
+                throw std::runtime_error("[ERROR] Unknown literal type for the for-loop initializer.");
+            }
+        }
+    }
+    while (true) {
+        if (stmt.m_condition) {
+            stmt.m_condition->accept(*this);
+            if (!isTruthy(m_result)) {
+                break;
+            }
+        }
+        stmt.m_body->accept(*this);
+        if (stmt.m_step) { stmt.m_step->accept(*this); }
+    }
+    m_environment = previous;
 }

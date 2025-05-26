@@ -26,8 +26,21 @@ void Scanner::scanToken() {
         case '}': addNullToken(TokenType::RIGHT_BRACE); break;
         case ',': addNullToken(TokenType::COMMA); break;
         case '.': addNullToken(TokenType::DOT); break;
-        case '-': addNullToken(TokenType::MINUS); break;
-        case '+': addNullToken(TokenType::PLUS); break;
+        case '-': {
+            if (match('-')) {
+                addNullToken(TokenType::DECREMENT);
+            } else {
+                addNullToken(TokenType::MINUS);
+            }
+        }
+        case '+': {
+            if (match('+')) {
+                addNullToken(TokenType::INCREMENT);
+            } else {
+                addNullToken(TokenType::PLUS);
+            }
+            break;
+        }
         case '/': {
             if (match('/')) {
                 while (peek() != '\n' && !isAtEnd()) {
