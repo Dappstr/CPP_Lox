@@ -8,7 +8,9 @@
 #include <variant>
 #include <optional>
 
-using Literal = std::variant<double, std::string, bool>;
+class LoxCallable;
+
+using Literal = std::variant<double, std::string, bool, std::shared_ptr<LoxCallable>>;
 using OptionalLiteral = std::optional<Literal>;
 
 enum class TokenType {

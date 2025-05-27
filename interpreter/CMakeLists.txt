@@ -17,4 +17,6 @@ add_executable(interpreter src/main.cpp
         src/statement.cpp
         include/statement.hpp
         include/environment.hpp
+        src/callable.cpp
+        include/callable.hpp
 )

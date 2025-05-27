@@ -1,7 +1,7 @@
 #include <utility>
 
 #include "../include/interpreter.hpp"
-
+#include "../include/callable.hpp"
 #include "../include/statement.hpp"
 
 void Interpreter::interpret(const std::vector<std::shared_ptr<Stmt>>& statements) {
@@ -256,4 +256,31 @@ void Interpreter::visitForStmt(const For_Stmt &stmt) {
         if (stmt.m_step) { stmt.m_step->accept(*this); }
     }
     m_environment = previous;
+}
+
+void Interpreter::visitFunctionStmt(const Function_Stmt &stmt) {
+    auto function = std::make_shared<LoxFunction>(stmt);
+    m_environment->define(stmt.m_name.lexeme(), std::move(function));
+}
+
+void Interpreter::visitCallExpr(const Call_Expr &expr) {
+    expr.m_callee->accept(*this);
+    const OptionalLiteral callee = m_result;
+
+    std::vector<OptionalLiteral> args;
+
+    for (const auto &arg : expr.m_args) {
+        arg->accept(*this);
+        args.emplace_back(m_result);
+    }
+
+    if (!callee.has_value() || !std::holds_alternative<std::shared_ptr<LoxCallable>>(callee.value())) {
+        throw std::runtime_error("Error, attempted to call a nil value.");
+    }
+
+    const auto function = std::get<std::shared_ptr<LoxCallable>>(callee.value());
+    if (args.size() != function->arity()) {
+        throw std::runtime_error("Error, wrong number of arguments.");
+    }
+    m_result = function->call(*this, args);
 }

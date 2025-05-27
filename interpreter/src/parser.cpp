@@ -1,4 +1,7 @@
 #include "../include/parser.hpp"
+
+#include <functional>
+
 #include "../include/expr.hpp"
 #include "../include/statement.hpp"
 
@@ -24,6 +27,7 @@ bool Parser::match(Types... types) {
 
 std::shared_ptr<Stmt> Parser::declaration() {
     try {
+        if (match(TokenType::FUN)) return function_declaration();
         if (match(TokenType::VAR)) return var_declaration();
         return statement();
     } catch (const std::exception& e) {
@@ -114,6 +118,27 @@ std::shared_ptr<Stmt> Parser::expression_statement() {
     consume(TokenType::SEMICOLON, "Expected ';' after expression.");
     return std::make_shared<Expression_Stmt>(expr);
 }
+
+std::shared_ptr<Stmt> Parser::function_declaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expected a function name.");
+    consume(TokenType::LEFT_PAREN, "Expected '(' after function name declaration.");
+
+    std::vector<Token> parameters;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        do {
+            if (parameters.size() >= 255) {
+                std::cerr << "Too many arguments!" << std::endl;
+            }
+            parameters.push_back(consume(TokenType::IDENTIFIER, "Expected parameter name"));
+        } while (match(TokenType::COMMA));
+    }
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after function declaration.");
+    consume(TokenType::LEFT_BRACE, "Expected '{' after function declaration.");
+    auto body = block_statement();
+
+    return std::make_shared<Function_Stmt>(name, parameters, body);
+}
+
 
 std::vector<std::shared_ptr<Stmt>>Parser::block_statement() {
     std::vector<std::shared_ptr<Stmt>> statements;
@@ -217,21 +242,15 @@ std::shared_ptr<Expr> Parser::unary() {
         auto right = unary();
         return std::make_shared<Unary_Expr>(right, op);
     }
-    return primary();
+    return call();
 }
 
 std::shared_ptr<Expr> Parser::primary() {
-    if (match(TokenType::FALSE)) {
-        return std::make_shared<Literal_Expr>(false);
-    }
+    if (match(TokenType::FALSE)) { return std::make_shared<Literal_Expr>(false); }
 
-    if (match(TokenType::TRUE)) {
-        return std::make_shared<Literal_Expr>(true);
-    }
+     if (match(TokenType::TRUE)) { return std::make_shared<Literal_Expr>(true); }
 
-    if (match(TokenType::NIL)) {
-        return std::make_shared<Literal_Expr>(std::nullopt);
-    }
+     if (match(TokenType::NIL)) { return std::make_shared<Literal_Expr>(std::nullopt); }
 
     if (match(TokenType::NUMBER, TokenType::STRING)) {
         const Token& tok = previous();
@@ -247,16 +266,41 @@ std::shared_ptr<Expr> Parser::primary() {
         return std::make_shared<Grouping_Expr>(std::vector<std::shared_ptr<Expr>>{expr});
     }
 
-    if (match(TokenType::IDENTIFIER)) {
-        return std::make_shared<Variable_Expr>(previous());
-    }
+    if (match(TokenType::IDENTIFIER)) { return std::make_shared<Variable_Expr>(previous()); }
 
-    if (peek().type() == TokenType::EndOfFile) {
-        throw std::runtime_error("Unexpected end of input. Perhaps you forgot a semicolon?");
-    }
+    if (peek().type() == TokenType::EndOfFile) { throw std::runtime_error("Unexpected end of input. Perhaps you forgot a semicolon?"); }
 
     throw std::runtime_error("Unexpected expression near: '" + peek().lexeme() + "'");
 }
+
+std::shared_ptr<Expr> Parser::call() {
+    auto expr = primary();
+    while (true) {
+        if (match(TokenType::LEFT_PAREN)) {
+            expr = finish_call(expr);
+        } else {
+            break;
+        }
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::finish_call(std::shared_ptr<Expr> callee) {
+    std::vector<std::shared_ptr<Expr>> args;
+
+    if (!check(TokenType::RIGHT_PAREN)) {
+        do {
+            if (args.size() >= 255) {
+                std::cerr << "Too many arguments in the function call.\n";
+            }
+            args.emplace_back(callee);
+        } while (match(TokenType::COMMA));
+    }
+
+    Token paren = consume(TokenType::RIGHT_PAREN, "Expected ')' after function call.");
+    return std::make_shared<Call_Expr>(callee, paren, args);
+}
+
 
 bool Parser::check(const TokenType &type) const {
     return !is_at_end() && peek().type() == type;

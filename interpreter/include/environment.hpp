@@ -4,6 +4,7 @@
 
 #include <unordered_map>
 #include <string>
+
 #include "token.hpp"
 
 class Environment {
@@ -19,8 +20,7 @@ class Environment {
         void define(const std::string& name, const OptionalLiteral& value) { m_variables[name] = value; }
 
         [[nodiscard]] OptionalLiteral get(const Token& name) const {
-            auto it = m_variables.find(name.lexeme());
-            if (it != m_variables.end()) {
+            if (const auto it = m_variables.find(name.lexeme()); it != m_variables.end()) {
                 return it->second;
             }
             if (m_parent) { return m_parent->get(name); }
@@ -28,7 +28,7 @@ class Environment {
         }
 
         void assign(const Token& name, const OptionalLiteral& value) {
-            if (auto it = m_variables.find(name.lexeme()); it != m_variables.end()) {
+            if (const auto it = m_variables.find(name.lexeme()); it != m_variables.end()) {
                 m_variables[name.lexeme()] = value;
                 return;
             }

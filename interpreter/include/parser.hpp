@@ -21,6 +21,7 @@ class Parser {
         std::shared_ptr<Stmt> if_statement();
         std::shared_ptr<Stmt> while_statement();
         std::shared_ptr<Stmt> for_statement();
+        std::shared_ptr<Stmt> function_declaration();
         std::vector<std::shared_ptr<Stmt>> block_statement();
         void synchronize();
 
@@ -32,11 +33,13 @@ class Parser {
         std::shared_ptr<Expr> factor();
         std::shared_ptr<Expr> unary();
         std::shared_ptr<Expr> primary();
+        std::shared_ptr<Expr> call();
+        std::shared_ptr<Expr> finish_call(std::shared_ptr<Expr> callee);
 
         template<typename ... Types>
         bool match(Types ...types);
 
-        bool check(const TokenType& type) const;
+        [[nodiscard]] bool check(const TokenType& type) const;
         const Token& advance();
         [[nodiscard]] bool is_at_end() const;
         const Token& peek() const;

@@ -2,6 +2,8 @@
 #ifndef INTERPRETER_HPP
 #define INTERPRETER_HPP
 
+#pragma once
+
 #include "expr.hpp"
 #include "statement.hpp"
 #include "token.hpp"
@@ -24,7 +26,10 @@ class Interpreter : public Expr_Visitor, public Stmt_Visitor {
         void visitIfStmt(const If_Stmt &stmt) override;
         void visitWhileStmt(const While_Stmt &stmt) override;
         void visitForStmt(const For_Stmt &stmt) override;
+        void visitFunctionStmt(const Function_Stmt &stmt) override;
+        void visitCallExpr(const Call_Expr &expr) override;
 
+        std::shared_ptr<Environment> environment() { return m_environment; }
     private:
         OptionalLiteral m_result{};
         std::shared_ptr<Environment> m_globals = std::make_shared<Environment>();

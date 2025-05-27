@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <memory>
-#include <variant>
-#include <string>
 #include "token.hpp"
+
+#include <memory>
+#include <vector>
 
 class Binary_Expr;
 class Grouping_Expr;
@@ -15,6 +15,7 @@ class Literal_Expr;
 class Unary_Expr;
 class Variable_Expr;
 class Assign_Expr;
+class Call_Expr;
 
 class Expr_Visitor {
     public:
@@ -24,6 +25,7 @@ class Expr_Visitor {
         virtual void visitUnaryExpr(const Unary_Expr& expr) = 0;
         virtual void visitVariableExpr(const Variable_Expr& expr) = 0;
         virtual void visitAssignExpr(const Assign_Expr& expr) = 0;
+        virtual void visitCallExpr(const Call_Expr& expr) = 0;
         virtual ~Expr_Visitor() = default;
 };
 
@@ -96,6 +98,17 @@ class Assign_Expr final : public Expr {
         void accept(Expr_Visitor &visitor) const override {
             visitor.visitAssignExpr(*this);
         }
+};
+
+class Call_Expr final : public Expr {
+    public:
+        std::shared_ptr<Expr> m_callee;
+        Token m_paren;
+        std::vector<std::shared_ptr<Expr>> m_args;
+
+    Call_Expr(std::shared_ptr<Expr> callee, Token paren, std::vector<std::shared_ptr<Expr>> args)
+        :m_callee(std::move(callee)), m_paren(std::move(paren)), m_args(std::move(args)) {}
+    void accept(Expr_Visitor &visitor) const override { visitor.visitCallExpr(*this); }
 };
 
 #endif //EXPR_HPP

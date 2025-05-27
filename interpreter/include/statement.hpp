@@ -5,6 +5,8 @@
 #include "token.hpp"
 #include <memory>
 
+class Expr;
+
 class Expression_Stmt;
 class Print_Stmt;
 class Var_Stmt;
@@ -12,6 +14,7 @@ class Block_Stmt;
 class If_Stmt;
 class While_Stmt;
 class For_Stmt;
+class Function_Stmt;
 
 class Stmt_Visitor {
     public:
@@ -22,6 +25,7 @@ class Stmt_Visitor {
         virtual void visitIfStmt(const If_Stmt& stmt) = 0;
         virtual void visitWhileStmt(const While_Stmt& stmt) = 0;
         virtual void visitForStmt(const For_Stmt& stmt) = 0;
+        virtual void visitFunctionStmt(const Function_Stmt& stmt) = 0;
         virtual ~Stmt_Visitor() = default;
 };
 
@@ -90,8 +94,18 @@ class For_Stmt : public Stmt {
 
         For_Stmt(std::shared_ptr<Stmt> initializer, std::shared_ptr<Expr> condition, std::shared_ptr<Expr> step, std::shared_ptr<Stmt> body)
             :m_initializer(std::move(initializer)), m_condition(std::move(condition)), m_step(std::move(step)), m_body(std::move(body)) {}
-
         void accept(Stmt_Visitor& visitor) override { visitor.visitForStmt(*this); }
+};
+
+class Function_Stmt : public Stmt {
+    public:
+        Token m_name;
+        std::vector<Token> m_arguments;
+        std::vector<std::shared_ptr<Stmt>> m_statements;
+
+        Function_Stmt(Token name, std::vector<Token> arguments, std::vector<std::shared_ptr<Stmt>> statements)
+            :m_name(std::move(name)), m_arguments(std::move(arguments)), m_statements(std::move(statements)) {}
+        void accept(Stmt_Visitor& visitor) override { visitor.visitFunctionStmt(*this); }
 };
 
 #endif // STATEMENT_HPP
