@@ -293,7 +293,7 @@ std::shared_ptr<Expr> Parser::finish_call(std::shared_ptr<Expr> callee) {
             if (args.size() >= 255) {
                 std::cerr << "Too many arguments in the function call.\n";
             }
-            args.emplace_back(callee);
+            args.emplace_back(expression());
         } while (match(TokenType::COMMA));
     }
 

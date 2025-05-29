@@ -30,7 +30,7 @@ void Interpreter::visitUnaryExpr(const Unary_Expr &expr) {
         }
         case TokenType::INCREMENT:
         case TokenType::DECREMENT: {
-            auto var_expr = std::dynamic_pointer_cast<Variable_Expr>(expr.m_operand);
+            const auto var_expr = std::dynamic_pointer_cast<Variable_Expr>(expr.m_operand);
             if (!var_expr) {
                 throw std::runtime_error(R"(Invalid operand for either '++' or '--', must be a variable.)");
             }
@@ -268,7 +268,6 @@ void Interpreter::visitCallExpr(const Call_Expr &expr) {
     const OptionalLiteral callee = m_result;
 
     std::vector<OptionalLiteral> args;
-
     for (const auto &arg : expr.m_args) {
         arg->accept(*this);
         args.emplace_back(m_result);
