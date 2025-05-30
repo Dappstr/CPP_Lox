@@ -5,7 +5,6 @@
 #pragma once
 
 #include "statement.hpp"
-#include "environment.hpp"
 #include "token.hpp"
 #include "interpreter.hpp"
 
@@ -22,8 +21,10 @@ class LoxCallable {
 class LoxFunction : public LoxCallable {
     public:
         Function_Stmt m_declaration;
+        std::shared_ptr<Environment> m_closure;
 
-        explicit LoxFunction(Function_Stmt declaration) : m_declaration(std::move(declaration)) {}
+        explicit LoxFunction(Function_Stmt declaration, std::shared_ptr<Environment> closure)
+            : m_declaration(std::move(declaration)), m_closure(std::move(closure)) {}
         [[nodiscard]] size_t arity() const override { return m_declaration.m_arguments.size(); }
         OptionalLiteral call(Interpreter &interpreter, const std::vector<OptionalLiteral>& arguments) override;
 };

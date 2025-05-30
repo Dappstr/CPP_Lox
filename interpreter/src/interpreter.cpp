@@ -259,7 +259,7 @@ void Interpreter::visitForStmt(const For_Stmt &stmt) {
 }
 
 void Interpreter::visitFunctionStmt(const Function_Stmt &stmt) {
-    auto function = std::make_shared<LoxFunction>(stmt);
+    auto function = std::make_shared<LoxFunction>(stmt, m_environment);
     m_environment->define(stmt.m_name.lexeme(), std::move(function));
 }
 
