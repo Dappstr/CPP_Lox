@@ -23,7 +23,9 @@ class Parser {
         std::shared_ptr<Stmt> for_statement();
         std::shared_ptr<Stmt> function_declaration();
         std::vector<std::shared_ptr<Stmt>> block_statement();
-        void synchronize();
+        std::shared_ptr<Stmt> return_statement();
+
+    void synchronize();
 
         std::shared_ptr<Expr> expression();
         std::shared_ptr<Expr> assignment();

@@ -28,8 +28,10 @@ class Interpreter : public Expr_Visitor, public Stmt_Visitor {
         void visitForStmt(const For_Stmt &stmt) override;
         void visitFunctionStmt(const Function_Stmt &stmt) override;
         void visitCallExpr(const Call_Expr &expr) override;
+        void visitReturnStmt(const Return_Stmt &stmt) override;
 
         std::shared_ptr<Environment> environment() { return m_environment; }
+
     private:
         OptionalLiteral m_result{};
         std::shared_ptr<Environment> m_globals = std::make_shared<Environment>();
@@ -37,6 +39,14 @@ class Interpreter : public Expr_Visitor, public Stmt_Visitor {
 
         static bool isTruthy(const OptionalLiteral& val);
         static bool isEqual(const OptionalLiteral& lhs, const OptionalLiteral& rhs);
+};
+
+class ReturnException : public std::runtime_error {
+    public:
+        OptionalLiteral m_value;
+
+        explicit ReturnException(OptionalLiteral value)
+            :std::runtime_error("Return"), m_value(std::move(value)) {}
 };
 
 #endif //INTERPRETER_HPP

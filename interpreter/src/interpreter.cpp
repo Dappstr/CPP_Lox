@@ -283,3 +283,13 @@ void Interpreter::visitCallExpr(const Call_Expr &expr) {
     }
     m_result = function->call(*this, args);
 }
+
+void Interpreter::visitReturnStmt(const Return_Stmt &stmt) {
+    OptionalLiteral value = std::nullopt;
+
+    if (stmt.m_value) {
+        stmt.m_value->accept(*this);
+        value = m_result;
+    }
+    throw ReturnException(value);
+}

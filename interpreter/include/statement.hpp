@@ -15,6 +15,7 @@ class If_Stmt;
 class While_Stmt;
 class For_Stmt;
 class Function_Stmt;
+class Return_Stmt;
 
 class Stmt_Visitor {
     public:
@@ -26,6 +27,7 @@ class Stmt_Visitor {
         virtual void visitWhileStmt(const While_Stmt& stmt) = 0;
         virtual void visitForStmt(const For_Stmt& stmt) = 0;
         virtual void visitFunctionStmt(const Function_Stmt& stmt) = 0;
+        virtual void visitReturnStmt(const Return_Stmt& stmt) = 0;
         virtual ~Stmt_Visitor() = default;
 };
 
@@ -106,6 +108,15 @@ class Function_Stmt : public Stmt {
         Function_Stmt(Token name, std::vector<Token> arguments, std::vector<std::shared_ptr<Stmt>> statements)
             :m_name(std::move(name)), m_arguments(std::move(arguments)), m_statements(std::move(statements)) {}
         void accept(Stmt_Visitor& visitor) override { visitor.visitFunctionStmt(*this); }
+};
+
+class Return_Stmt : public Stmt {
+    public:
+        Token m_keyword;
+        std::shared_ptr<Expr> m_value;
+        Return_Stmt(Token keyword, std::shared_ptr<Expr> value)
+            :m_keyword(std::move(keyword)), m_value(std::move(value)) {}
+        void accept(Stmt_Visitor& visitor) override { visitor.visitReturnStmt(*this); }
 };
 
 #endif // STATEMENT_HPP
